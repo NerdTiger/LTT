@@ -21,7 +21,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  */
 class UserType extends Eloquent
 {
-	protected $table = 'user_type';
+	protected $table = 'user_types';
 	protected $primaryKey = 'user_type_id';
 	public $timestamps = false;
 

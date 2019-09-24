@@ -507,7 +507,7 @@ mark,
 }
 
 .blockquote-footer::before {
-  content: "\2014\A0";
+  content: "— ";
 }
 
 .img-fluid {
@@ -10546,10 +10546,6 @@ a.text-dark:focus {
 
 .invisible {
   visibility: hidden !important;
-}
-.headerfont{
-  color: white;
-  font-size: 18pt;
 }
 
 @media print {

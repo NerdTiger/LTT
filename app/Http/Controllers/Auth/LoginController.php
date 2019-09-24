@@ -25,15 +25,83 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/api/project/index';
 
     /**
      * Create a new controller instance.
-     *
+     * G#mkHgyhd665%jf$
      * @return void
      */
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
     }
+    /**
+     * Handle an authentication attempt.
+     *
+     * @param  \Illuminate\Http\Request $request
+     *
+     * @return Response
+     */
+    /*
+    public function authenticate(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials)) {
+            // Authentication passed...
+            return redirect()->intended('dashboard');
+        }
+    }
+
+    private function signin() {
+        $Username = isset($_POST['Username'])?$_POST['Username']:null;
+        $Password= isset($_POST['Password'])?$_POST['Password']:null;
+        $error = '';
+        if($Username==null || $Password==null){
+              //$error = 'user name or password can not be empty.';
+            require_once('views/login/login.php');
+        } 
+        else 
+        {
+            $result=$this->model->checkUserAccess($Username);
+             if(empty($result) || count($result)==0){
+              $message = $Username.' user doesn\'t exist in system;';
+              $partpagepath='views/login/showmessage.php';
+              require_once('views/login/login.php');
+              exit;
+             }else
+             {
+                 $access = $result[0]['access'];
+                 if($access==='0'){
+                      $message= $Username. 'user has no access for system.';
+                      $partpagepath='views/login/showmessage.php';
+                      require_once('views/login/login.php');  
+                      exit;
+                  }
+             }
+             
+            $validuser =$this->model->getUserInfo($Username,$Password);
+            if($this->model->userStatus=='UserValid'){
+                $authorises=$this->adminModel->getAllUsertypeAuthorises($_SESSION['logineduser']);
+                if(empty($authorises)){
+                      $message='user is not authorized';
+                      $partpagepath='views/login/showmessage.php';
+                      require_once('views/login/login.php');
+                }                  
+                else{
+                $_SESSION['userauthorises']=$authorises;
+                $topaccess=$authorises[count($authorises)-1];
+                $_SESSION['usertype']=$topaccess['user_type_id'];
+                $_SESSION['lockdate']=$this->settingmodel->getLockoffData()[0][0];
+                $this->fireController($topaccess['user_entrymodel'],$topaccess['user_entrymethod']);
+                }
+            }else{
+              $message=$this->model->userStatus;
+              $partpagepath='views/login/showmessage.php';
+              require_once('views/login/login.php');
+            }
+        }
+      }*/
+
 }

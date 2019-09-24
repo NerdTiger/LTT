@@ -1,0 +1,166 @@
+
+/* 
+    Created on : 20-Sep-2019
+    Author     : kevin
+
+*/
+
+
+/*
+below are csses from header.css of time-tracker
+comment 1 start
+*/
+.leftnav {
+  
+    font-family: calibri;
+    border-right-style:solid; 
+}
+
+.headertop {
+
+    background-color: rgba(0,113,190,1);
+    font-family: calibri;
+  
+}
+
+#row01{
+
+background-color: rgba(0,113,190,1);
+font-family: calibri;
+/*border-style:none;*/
+}
+
+#ele_word_ofrow01{
+color:white;
+/*border-style:none;*/
+width:25%;
+}
+
+#ele_blank_ofrow01{
+color:white;
+/*border-style:none;*/
+width:70%;
+}
+
+#ele_img_ofrow01{
+    width:30%;
+}
+
+#row02{
+
+
+font-size: 150%;
+font-family: calibri;
+align:right;
+/*border-style:none;*/
+}
+
+.menuitem{
+font-size: 150%;
+font-family: calibri;
+
+}
+
+.ele_row2{
+color:white;
+/*border-style:none;*/
+
+}
+#ele_jobs_ofrow02{
+
+}
+
+#ele_hours_ofrow02{
+
+}
+
+#ele_admin_ofrow02{
+
+}
+
+#ele_settings_ofrow02{
+
+}
+
+#ele_logout_ofrow02{
+
+}
+
+#ele_help_ofrow02{
+
+}
+
+
+#row03{
+
+}
+
+#ele_pagekayword_ofrow03{
+
+}
+
+#ele_searcharea_ofrow03{
+
+}
+
+#row04{
+
+}
+
+#ele_navigate_ofrow04{
+
+}
+
+#ele_tableview_ofrow04{
+
+}
+
+.blackbackgroundwhitefont{
+    background-color:  #09c5ce;;
+    color:black;
+    font-family: calibri;
+}
+        
+.leftnavigateareafont{
+    font-size:116%;
+    color:white;
+}
+
+.fullheightdiv {
+    /*height:40vh;*/    
+}
+
+.nopaddingtablecell_div{
+    padding-right:0;
+    padding-left:0;
+}
+
+.menufontstyle{
+font-size:18px;
+    background-color: transparent;
+    color: white;
+    font-family:raleway;
+}
+
+.tableheader{
+    
+color: darkblue;
+}
+
+.btn-group, .btn-group-vertical {
+    position: relative;
+    display: -ms-inline-flexbox;
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+/* comment 1 end */
+
+.nopaddingtablecell_div{
+    padding-right:0;
+    padding-left:0;
+}
+.whitebackgroundcolorfordropdown{
+    background-color: white;
+    color: black;
+}

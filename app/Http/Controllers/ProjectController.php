@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\PostCollection;
+
+
+use App\ModelBuilder\ProjectModelBuilder;
+
 
 class ProjectController extends Controller
 {
@@ -12,14 +17,39 @@ class ProjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    private $project_model_Builder;
+
     public function __construct(){
-        parent::checkAuthorizebyUserID();
-        parent::getLockOff();
+        // parent::checkAuthorizebyUserID();
+        // parent::getLockOff();
+        $this->project_model_builder = new ProjectModelBuilder();
+    }
+    public function listproject(){
+
+        $projects=$this->project_model_builder->getProjectList();
+        if(empty($projects)){
+            //   $message='user is not authorized';
+            //   $partpagepath='views/login/showmessage.php';
+            //   require_once('views/login/login.php');
+        }                  
+        else return $projects;
 
     }
+           
+    
+/*
+$post = new Post([
+        'title' => $request->get('title'),
+        'body' => $request->get('body')
+      ]);
 
+      $post->save();
+
+      return response()->json('success');
+       */
     public function index(Request $request)
     {
+        /*
         $this->ut='5' ;
         $request->session()->put('usertype',$this->ut);
 
@@ -39,6 +69,14 @@ class ProjectController extends Controller
         ->get(); 
         //echo $projects[0]->project_number;
         return view('project.index', array('uts' => $this->uts,'projects'=>$projects,'lockoff'=>$this->lockoff));
+        */
+
+
+            
+        
+
+
+        
      }
      public function searchproject(Request $request) 
      {

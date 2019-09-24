@@ -8,25 +8,93 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
-/**
- * The following block of code may be used to automatically register your
- * Vue components. It will recursively scan this directory for the Vue
- * components and automatically register them with their "basename".
- *
- * Eg. ./components/ExampleComponent.vue -> <example-component></example-component>
- */
+import VueRouter from 'vue-router';
+Vue.use(VueRouter);
 
-// const files = require.context('./', true, /\.vue$/i);
-// files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default));
+import VueAxios from 'vue-axios';
+import axios from 'axios';
 
-Vue.component('example-component', require('./components/ExampleComponent.vue').default);
+import App from './App.vue';
 
-/**
- * Next, we will create a fresh Vue application instance and attach it to
- * the page. Then, you may begin adding components to this application
- * or customize the JavaScript scaffolding to fit your unique needs.
- */
+Vue.use(VueAxios, axios);
 
-const app = new Vue({
-    el: '#app',
-});
+//import TTViewComponent from './components/TTViewComponent.vue';
+import EntryComponent from './components/EntryComponent.vue';
+import UserComponent from './components/UserComponent.vue';
+import HopeComponent from './components/HopeComponent.vue';
+
+import HeaderComponent from './components/HeaderComponent.vue';
+
+import ProjectListComponent from './components/ProjectListComponent.vue';
+import UserViewComponent from './components/UserViewComponent.vue';
+
+
+/*
+
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+*/
+
+//Vue.component('ExampleComponent', require('./components/ExampleComponent.vue'));
+// Vue.component('TtadminMenuitems', require('./components/menuitems/ttadmin_menuitems.vue'));
+// Vue.component('UserMenuitems', require('./components/menuitems/user_menuitems.vue'));
+
+
+//Vue.component('TTViewComponent', TTViewComponent);
+Vue.component('HeaderComponent', HeaderComponent);
+Vue.component('ProjectListComponent', ProjectListComponent);
+Vue.component('UserViewComponent', UserViewComponent);
+
+
+
+
+
+import TTAdminProjectIndexComponent from './components/project/TTAdminProjectIndexComponent.vue';
+import ClientManagerProjectIndexComponent from './components/project/ClientManagerProjectIndexComponent.vue';
+import UserProjectIndexComponent from './components/project/UserProjectIndexComponent.vue';
+
+Vue.component('TTAdminProjectIndexComponent', TTAdminProjectIndexComponent);
+Vue.component('ClientManagerProjectIndexComponent', ClientManagerProjectIndexComponent);
+Vue.component('UserProjectIndexComponent', UserProjectIndexComponent);
+
+const routes = [
+  {
+      name: 'defaultuserview',
+      path: '/',
+      component: UserViewComponent
+  },
+  {
+      name: 'entry',
+      path: '/entry',
+      component: EntryComponent
+  },
+  {
+      name: 'user',
+      path: '/user',
+      component: UserComponent
+  },
+  {
+    name: 'hope',
+    path: '/hope',
+    component: HopeComponent
+    },    
+    {
+        name: 'projectlistcomponent',
+        path: '/projectlistcomponent',
+        component: ProjectListComponent
+    },
+    
+    ];
+
+
+const router = new VueRouter({ mode: 'history', routes: routes});
+const app = new Vue(Vue.util.extend({ router }, App)).$mount('#app');
+

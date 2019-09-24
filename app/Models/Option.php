@@ -20,6 +20,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  */
 class Option extends Eloquent
 {
+	protected $table = 'options';
 	protected $primaryKey = 'option_id';
 	public $timestamps = false;
 
