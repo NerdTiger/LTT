@@ -11,27 +11,36 @@
 |
 */
 
-// 29100921 1515 comemnt for login page back
-Route::get('/{any}', function () {
-    return view('post');
-  })->where('any', '.*');
+// Route::get('/{any}', function () {
+//     return view('post');
+//   })->where('any', '.*');
 
+// Route::get('/', function () {
+//   return view('project_index');
+// });
 
 
 // Route::get('/selectdemo', function () {
 //     return view('SelectDemo');
 // })->name('SelectDemo');
 
-Auth::routes(['register' => false]);
+//Auth::routes(['register' => false]);
 Auth::routes();
 
+//Route::get('/', '/project/index');
+//Route::get('/', 'ProjectController@index');
+Route::get('/', function () {
+    return view('welcome');
 
+});
+    
+//Route::get('/autoinvoicer', 'InvoiceController@index');
+Route::get('/autoinvoice/index', 'InvoiceController@index2');
 
-// Route::get('/', function () {
-//     return view('welcome');
-//   });
-
-
-/*
-
-*/
+Route::get('/biweekly_invoice', 'InvoiceController@biweekly_invoice');
+Route::get('/monthly_invoice', 'InvoiceController@monthly_invoice');
+Route::get('/testlogic', 'InvoiceController@testlogic');
+Route::get('/project/index', 'ProjectController@index');
+Route::get('/mailable',function(){
+return new App\Mail\AutoInvoice3();
+});

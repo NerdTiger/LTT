@@ -11,8 +11,8 @@
     <body>
         <div id="app">
         
-          <example-component1></example-component1>
+          <!-- <example-component1></example-component1> -->
         </div>
-        <script src="{{ mix('js/app.js') }}" type="text/javascript"></script>
+        <!-- <script src="{{ mix('js/app.js') }}" type="text/javascript"></script> -->
     </body>
 </html>

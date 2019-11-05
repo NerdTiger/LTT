@@ -15,10 +15,9 @@ import VueAxios from 'vue-axios';
 import axios from 'axios';
 
 import App from './App.vue';
-
 Vue.use(VueAxios, axios);
 
-//import TTViewComponent from './components/TTViewComponent.vue';
+import TTViewComponent from './components/TTViewComponent.vue';
 import EntryComponent from './components/EntryComponent.vue';
 import UserComponent from './components/UserComponent.vue';
 import HopeComponent from './components/HopeComponent.vue';
@@ -48,22 +47,11 @@ Vue.component('HeaderComponent', HeaderComponent);
 // Vue.component('UserMenuitems', require('./components/menuitems/user_menuitems.vue'));
 
 
-//Vue.component('TTViewComponent', TTViewComponent);
+Vue.component('TTViewComponent', TTViewComponent);
 Vue.component('HeaderComponent', HeaderComponent);
 Vue.component('ProjectListComponent', ProjectListComponent);
 Vue.component('UserViewComponent', UserViewComponent);
 
-
-
-
-
-import TTAdminProjectIndexComponent from './components/project/TTAdminProjectIndexComponent.vue';
-import ClientManagerProjectIndexComponent from './components/project/ClientManagerProjectIndexComponent.vue';
-import UserProjectIndexComponent from './components/project/UserProjectIndexComponent.vue';
-
-Vue.component('TTAdminProjectIndexComponent', TTAdminProjectIndexComponent);
-Vue.component('ClientManagerProjectIndexComponent', ClientManagerProjectIndexComponent);
-Vue.component('UserProjectIndexComponent', UserProjectIndexComponent);
 
 const routes = [
   {

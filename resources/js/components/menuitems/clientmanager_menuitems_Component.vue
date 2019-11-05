@@ -7,8 +7,12 @@
       Projects
     </button>
     <div class="dropdown-menu ">
-      <a class="dropdown-item" href="#"  ><img itemprop="image" class="mobile" src="images/diamond5.svg" alt="Users" style="height: 16px;margin-right:30px;">Projects</a>
-      <a class="dropdown-item" href="#" ><img itemprop="image" class="mobile" src="images/diamond5.svg" alt="Users" style="height: 16px;margin-right:30px;">Hours</a>
+      <router-link :to="{ name: 'project/index' }" class="dropdown-item">
+        <img itemprop="image" class="mobile" src="images/diamond5.svg" alt="Users" style="height: 16px;margin-right:30px;">Projects
+      </router-link>
+      <router-link :to="{ name: 'project/index' }" class="dropdown-item">
+        <img itemprop="image" class="mobile" src="images/diamond5.svg" alt="Users" style="height: 16px;margin-right:30px;">Hours
+      </router-link>
     </div>
   </div>
   <div class="dropdown">
@@ -16,9 +20,12 @@
       Reports
     </button>
     <div class="dropdown-menu">
-      <a class="dropdown-item" href="#" ></a>
-      <a class="dropdown-item" href="#" onclick="loadreport_CMReportforCM();"><img itemprop="image" class="mobile" src="images/diamond5.svg"  style="height: 16px;margin-right:30px;">CM Bonus</a>
-      <a class="dropdown-item" href="#"><img itemprop="image" class="mobile" src="images/diamond5.svg" alt="Users" style="height: 16px;margin-right:30px;">Hours Transfer Report</a>
+      <router-link :to="{ name: 'project/index' }" class="dropdown-item">
+        <img itemprop="image" class="mobile" src="images/diamond5.svg"  style="height: 16px;margin-right:30px;">CM Bonus
+      </router-link>
+      <router-link :to="{ name: 'project/index' }" class="dropdown-item">
+      <img itemprop="image" class="mobile" src="images/diamond5.svg" alt="Users" style="height: 16px;margin-right:30px;">Hours Transfer Report
+      </router-link>
     </div>
   </div>  
 <br />

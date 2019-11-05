@@ -22,6 +22,7 @@ class ProjectController extends Controller
     public function __construct(){
         // parent::checkAuthorizebyUserID();
         // parent::getLockOff();
+        //$this->middleware('auth');
         $this->project_model_builder = new ProjectModelBuilder();
     }
     public function listproject(){
@@ -70,13 +71,7 @@ $post = new Post([
         //echo $projects[0]->project_number;
         return view('project.index', array('uts' => $this->uts,'projects'=>$projects,'lockoff'=>$this->lockoff));
         */
-
-
-            
-        
-
-
-        
+        return view('project_index');
      }
      public function searchproject(Request $request) 
      {

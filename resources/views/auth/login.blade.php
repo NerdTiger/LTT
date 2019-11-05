@@ -72,6 +72,6 @@
     </div>
 </div>
 <?php 
-echo app('auth.password.broker')->createToken("kevintigertj@gmail.com");
+// echo app('auth.password.broker')->createToken("kevintigertj@gmail.com");
 ?>
 @endsection

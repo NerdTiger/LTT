@@ -2,13 +2,11 @@
 
 <template>
   <div class="container" >
-    
-    
        <HeaderComponent></HeaderComponent>
 
-   <!-- <transition name="fade"> 
+   <transition name="fade"> 
       <router-view></router-view>
-    </transition> -->
+    </transition>
   </div>
 </template>
 
@@ -20,8 +18,6 @@
     .fade-enter, .fade-leave-active {
       opacity: 0
     }
-  
-
 </style>
 
 <style>
@@ -34,7 +30,7 @@ font-family: calibri;
 
 </style>
 <script>
-console.log('TTView.vue is imported');
+console.log('App.vue is imported');
     export default{
     data(){
         return {
@@ -46,13 +42,13 @@ console.log('TTView.vue is imported');
         }
     },
  created() {
-   console.log('TTView.vue created');
-      let uri = '/api/project/index';
+   console.log('App.vue created');
+      // let uri = '/api/project/index';
       // this.axios.get(uri).then(response => {
-      //    this.login=response.data.login; 
-      //    this.project=response.data.project; 
-         
-      // });
+      //    //this.login=response.data.login; 
+         //this.project=response.data.project; 
+
+    //   });
     },
 mounted() {
             console.log('TTViewComponent.vue mounted.');
