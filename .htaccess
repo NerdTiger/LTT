@@ -3,15 +3,18 @@
         Options -MultiViews
     </IfModule>
 
-    RewriteEngine On
-    #
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
-    
+#DirectoryIndex index.php
+RewriteEngine On
+#http to https on cpanel websites
+#RewriteCond %{HTTPS} !=on
+#RewriteRule ^/?(.*) https://timetracker-dev.salesbeacon.com/$1 [R,L]
+
     # Redirect Trailing Slashes...
     RewriteRule ^(.*)/$ /$1 [L,R=301]
 
     # Handle Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    RewriteRule ^ http://localhost/LTT/public/index.php [L]
 </IfModule>
+

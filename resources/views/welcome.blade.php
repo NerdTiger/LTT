@@ -6,10 +6,16 @@
 
         <title>Laravel</title>
 
+    <!-- Scripts -->
+    <script src="{{ asset('js/app.js') }}"></script>
+
+
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
 
         <!-- Styles -->
+        <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+
         <style>
             html, body {
                 background-color: #fff;
