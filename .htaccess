@@ -10,11 +10,11 @@ RewriteEngine On
 #RewriteRule ^/?(.*) https://timetracker-dev.salesbeacon.com/$1 [R,L]
 
     # Redirect Trailing Slashes...
-    RewriteRule ^(.*)/$ /$1 [L,R=301]
+    #RewriteRule ^(.*)/$ /$1 [L,R=301]
 
     # Handle Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ http://localhost/LTT/public/index.php [L]
+    #RewriteCond %{REQUEST_FILENAME} !-d
+    #RewriteCond %{REQUEST_FILENAME} !-f
+    #RewriteRule ^ http://localhost/LTT/public/index.php [L]
 </IfModule>
 

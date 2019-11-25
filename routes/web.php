@@ -48,6 +48,7 @@ Route::post('/generateinvoice_monthly', 'InvoiceController@generate_invoices_mon
 Route::post('/generateinvoice_rangedate', 'InvoiceController@generate_invoices_rangedate')->name('generateinvoice_rangedate');//generate payment for hourly users for biweekly payment
 //Route::post('/generate_payment_summary', 'InvoiceController@generate_payment_summary')->name('generate_payment_summary');//generate payment for hourly users for biweekly payment
 
+Route::get('/test_mail', 'InvoiceController@test_mail');//test_mail_address
 
 
 Route::get('/biweekly_invoice', 'InvoiceController@biweekly_invoice');

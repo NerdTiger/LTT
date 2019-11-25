@@ -5,24 +5,37 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PHPMailer\PHPMailer\PHPMailer;
-
+use Config;
 
 class InvoiceController extends Controller
 {
 	private $invoice_date;	
 	private $invoice_period;
+	private $mail_instance;
+	private $check_mail_address='0';
+
+	private $showonpage='1';
+	private $it_test='0';
+	private $test_accounting_mail_address;
+	private $test_enduser_mail_address;
 	public function __construct(){
 		ini_set("xdebug.var_display_max_children", -1);
 		ini_set("xdebug.var_display_max_data", -1);
 		ini_set("xdebug.var_display_max_depth", -1);
 		$this->middleware('auth');
-	
-	}	
-	private  function sendEmail($mail_content,$subject,$mail_to,$user_name){
-		$from='ttinvoicing@salesbeacon.com';
+		$this->setup_MailServer();
+		$test_mail_config=Config::get("app.test_mail");		
+		// ["test_accounting_mail_address"=>"kevin.it@salesbeacon.com","test_accounting_mail_username"=>"accounting",],
+		// ["test_enduser_mail_address"=>"kevintigertj@gmailcom","test_enduser_mail_username"=>"Kevin QQ"],
 
-        $mail = new PHPMailer(true);
-    	try{
+		$this->test_accounting_mail_address=$test_mail_config['accounting'];
+		$this->test_enduser_mail_address=$test_mail_config['enduser'];
+		
+	}
+	private function setup_MailServer(){
+
+    	try{			
+			$mail=new PHPMailer(true);
     		$mail->isSMTP();
     		$mail->CharSet = 'utf-8';
     		$mail->SMTPAuth =true;
@@ -30,11 +43,58 @@ class InvoiceController extends Controller
     		$mail->Host = env('MAIL_HOST'); //gmail has host > smtp.gmail.com
     		$mail->Port = env('MAIL_PORT'); //gmail has port > 587 . without double quotes
     		$mail->Username = env('MAIL_USERNAME'); //your username. actually your email
-    		$mail->Password = env('MAIL_PASSWORD'); // your password. your mail password
+			$mail->Password = env('MAIL_PASSWORD'); // your password. your mail password
+			$this->mail_instance=$mail;
+			
+    	}catch(phpmailerException $e){
+    		dd($e);
+    	}catch(Exception $e){
+    		dd($e);
+    	}
+
+	}
+	public function test_mail(Request $request){
+		$test_mail_address=$request->input('test_mail_address');
+		$test_mail_username=$request->input('test_mail_username');
+		if(empty($test_mail_address))return;
+		$to=[
+			"test_mail_address"=>$test_mail_address,
+			"test_mail_username"=>$test_mail_username
+		];
+		$from='ttinvoicing@salesbeacon.com';
+		$this->test_mail_sending($from,'this is a test mail','if this mail is received, mail sending is working',$to);
+	}
+	public function cmd_test_mail($test_mail_address,$test_mail_username){
+		if(empty($test_mail_address))return;
+		if(empty($test_mail_username))return;
+		$to=[
+			"test_mail_address"=>$test_mail_address,
+			"test_mail_username"=>$test_mail_username
+		];
+		$from='ttinvoicing@salesbeacon.com';
+		$this->test_mail_sending($from,'this is a test mail','if this mail is received, mail sending is working',$to);
+	}
+
+	private function test_mail_sending($from,$subject,$mail_content,$to){
+	$mail=$this->mail_instance;
+		$mail->SetFrom($from);
+		$mail->Subject = $subject;
+		$mail->MsgHTML($mail_content);
+		// $mail->addAddress('kevin.it@salesbeacon.com','kevin it'); //$mail_to
+		$mail->addAddress($to['test_mail_address'],$to['test_mail_username']); //$mail_to
+		$mail->send();
+
+	}
+	
+	private  function sendEmail($mail_content,$subject,$mail_to,$user_name){
+		$from='ttinvoicing@salesbeacon.com';
+
+        $mail = $this->mail_instance;
+    	try{
 			$mail->SetFrom($from);
     		$mail->Subject = $subject;
     		$mail->MsgHTML($mail_content);
-    		$mail->addAddress('kevin.it@salesbeacon.com','kevin it'); //$mail_to
+    		$mail->addAddress($mail_to,$user_name); //$mail_to
     		$mail->send();
     	}catch(phpmailerException $e){
     		dd($e);
@@ -50,15 +110,6 @@ class InvoiceController extends Controller
 
 	}
 
-	public function index6(Request $request){
-		// $user_id=$request->input('user_id');
-		// $invoice_month=$request->input('invoice_month');
-		// $invoice_year=$request->input('invoice_year');
-		// $mail_content= $this->build_invoice_content($invoice_year,$invoice_month);
-		return view('autoinvoice');
-
-
-	}
 	public function index(Request $request)
     {
 		$user_id=$request->input('user_id');
@@ -84,15 +135,38 @@ class InvoiceController extends Controller
 		"end_date"=>$end_date->format('Y-m-d'),
 		];
 	}
+	public function cmd_biweekly_invoice($invoice_date='',$check_mail_address='0',$showonpage='0',$it_test='0'){
+		if($invoice_date==='')return;
+		$this->check_mail_address=empty($check_mail_address)?'0':$check_mail_address;
+		$this->showonpage=empty($showonpage)?'0':$showonpage;
+		$this->it_test=empty($it_test)?'0':$it_test;
+		$this->generate_biweeklyreport_for_employees($invoice_date);
+	}
+	public function cmd_monthly_invoice($invoice_year='',$invoice_month='',$check_mail_address='0',$showonpage='0',$it_test='0'){
+		if($invoice_month==='')return;
+		if($invoice_year==='')return;
+		$this->check_mail_address=empty($check_mail_address)?'0':$check_mail_address;
+		$this->showonpage=empty($showonpage)?'0':$showonpage;
+		$this->it_test=empty($it_test)?'0':$it_test;
+		$this->generate_invoice_for_contractor_monthly($invoice_year,$invoice_month);
+	}
+
+
 	public function biweekly_invoice(Request $request){
 
 		$invoice_date=$request->input('invoice_date');
+		$this->check_mail_address=empty($request->input('check_mail_address'))?'0':$request->input('check_mail_address');
+		$this->showonpage=empty($request->input('showonpage'))?'0':$request->input('showonpage');
+		$this->it_test=empty($request->input('it_test'))?'0':$request->input('it_test');
 		$this->generate_biweeklyreport_for_employees($invoice_date);
 	}
 	public function monthly_invoice(Request $request){
 
 		$invoice_month=$request->input('invoice_month');
 		$invoice_year=$request->input('invoice_year');
+		$this->check_mail_address=empty($request->input('check_mail_address'))?'0':$request->input('check_mail_address');
+		$this->showonpage=empty($request->input('showonpage'))?'0':$request->input('showonpage');
+		$this->it_test=empty($request->input('it_test'))?'0':$request->input('it_test');
 		$this->generate_invoice_for_contractor_monthly($invoice_year,$invoice_month);
 	}
 
@@ -281,10 +355,6 @@ class InvoiceController extends Controller
 				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
 				$invoice_content.=$invoice_html;
 				
-				//$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
-			
-			//echo $invoice_content;
-			
 		
 		}
 
@@ -501,11 +571,6 @@ class InvoiceController extends Controller
 				
 				$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
 				echo $invoice_html;
-				//$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
-				//$invoice_content.=$invoice_html;
-
-
-				//$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
 			}
 
 
@@ -635,7 +700,7 @@ class InvoiceController extends Controller
 		}
 	}
 	private function build_invoice_for_contractor_monthly($start_date,$end_date,$invoice_period){
-
+		$invoice_html='';
 		$query=DB::table('time_entry as te')
         ->join('project_resource as pr','te.entry_project_resource_id','pr.project_resource_id')
 		->join('users as u','u.user_id','pr.project_resource_resource_id')
@@ -655,12 +720,29 @@ class InvoiceController extends Controller
 			$invoice_number=$user_id . "-" . $invoice_period;
 			$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
 			$invoice_data=$this->generate_invoice(1,$user_id,$start_date,$end_date,$invoice_number,$invoice_period);
-			
+			if($this->check_mail_address==='0'){
 			$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
+			if($this->showonpage==='1'){
+				echo $invoice_html;
 
-			$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
-			echo $invoice_html;
-			//$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
+			}else{
+				$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
+				if($this->it_test==='1')
+				{
+					$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+				}
+				else {				
+					$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
+				}
+				}
+			
+			
+			}
+			else{
+				$invoice_html=$user_email.'<br/>';	
+				echo $invoice_html;
+			}
+			
 		}
 	}
 	private function build_biweeklyreport_content($start_date,$end_date,$invoice_number,$invoice_period){
@@ -688,12 +770,29 @@ class InvoiceController extends Controller
 			$invoice_number=$invoice_number;
 			$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
 			$invoice_data=$this->generate_invoice(0,$user_id,$start_date,$end_date,$invoice_number,$invoice_period);
-			
-			$invoice_html=view('paymentreport_generate',array('invoice_data'=>$invoice_data));	
-
-			$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
-			echo $invoice_html;
-			//$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
+			if($this->check_mail_address==='0'){
+				//$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
+				$invoice_html=view('paymentreport_generate',array('invoice_data'=>$invoice_data));	
+				if($this->showonpage==='1'){
+					echo $invoice_html;
+	
+				}else{
+					$subject = "biweekly  Automated payment report $invoice_period for $user_name";	
+					if($this->it_test==='1')
+					{
+						$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+					}
+					else {				
+						$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
+					}
+					}
+				
+				
+				}
+				else{
+					$invoice_html=$user_email.'<br/>';	
+					echo $invoice_html;
+				}
 		}
 	}
 	private function generate_invoice_for_contractor_monthly($invoice_year,$invoice_month){
