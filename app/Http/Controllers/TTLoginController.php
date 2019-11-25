@@ -8,7 +8,7 @@ use App\ModelBuilder\SettingModelBuilder;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class LoginController extends Controller
+class TTLoginController extends Controller
 {
 
     private $admin_model_builder;
@@ -96,7 +96,7 @@ class LoginController extends Controller
      switch($controller) {
        case 'login':
            require_once('models/login.php');
-         $controller = new LoginController();
+         $controller = new TTLoginController();
        break;
    case 'enduser':
            

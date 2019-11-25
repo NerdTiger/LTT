@@ -162,24 +162,5 @@
         In the absence of reported concerns, the stated amount indicated on this invoice will be paid to you, the contractor.<br /></i></font></center></p>
 
     </div>
-
-      
-
-<!-- <script src="js/app.js" type="text/javascript"></script> -->
-      <script>
-          const router = new VueRouter({
-  routes: [
-    {
-      path: '/',
-      components: {
-        default: Foo,
-        a: Bar,
-        b: Baz
-      }
-    }
-  ]
-});
-
-      </script>
   </body>
 </html>

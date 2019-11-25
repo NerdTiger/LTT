@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>Sales Beacon Apps</title>
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
@@ -74,7 +74,8 @@
             @if (Route::has('login'))
                 <div class="top-right links">
                     @auth
-                        <a href="{{ url('/home') }}">Home</a>
+                        <!-- <a href="{{ url('/home') }}">Home</a> -->
+                        <a href="">Log Out</a>
                     @else
                         <a href="{{ route('login') }}">Login</a>
 
@@ -87,17 +88,15 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    Laravel
+                Sales Beacon Apps
                 </div>
 
                 <div class="links">
-                    <a href="https://laravel.com/docs">Docs</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://blog.laravel.com">Blog</a>
-                    <a href="https://nova.laravel.com">Nova</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
+                    <a href="#">Time Tracker</a>
+                    <a href="{{ route('index_monthly')}}">Auto Invoice-Monthly Report</a>
+                    <a href="{{ route('index_rangedate')}}">Auto Invoice-Biweekly Payment Report</a>
+                    <a href="{{ route('index_rangedate')}}">PM Report</a>
+                    <a href="#">Other</a>
                 </div>
             </div>
         </div>

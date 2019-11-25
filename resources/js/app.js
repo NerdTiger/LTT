@@ -17,6 +17,9 @@ import axios from 'axios';
 import App from './App.vue';
 Vue.use(VueAxios, axios);
 
+
+
+
 import TTViewComponent from './components/TTViewComponent.vue';
 import EntryComponent from './components/EntryComponent.vue';
 import UserComponent from './components/UserComponent.vue';
@@ -26,25 +29,6 @@ import HeaderComponent from './components/HeaderComponent.vue';
 
 import ProjectListComponent from './components/ProjectListComponent.vue';
 import UserViewComponent from './components/UserViewComponent.vue';
-
-
-/*
-
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-*/
-
-//Vue.component('ExampleComponent', require('./components/ExampleComponent.vue'));
-// Vue.component('TtadminMenuitems', require('./components/menuitems/ttadmin_menuitems.vue'));
-// Vue.component('UserMenuitems', require('./components/menuitems/user_menuitems.vue'));
 
 
 Vue.component('TTViewComponent', TTViewComponent);

@@ -10,10 +10,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 class InvoiceController extends Controller
 {
 	private $invoice_date;	
+	private $invoice_period;
 	public function __construct(){
 		ini_set("xdebug.var_display_max_children", -1);
 		ini_set("xdebug.var_display_max_data", -1);
 		ini_set("xdebug.var_display_max_depth", -1);
+		$this->middleware('auth');
+	
 	}	
 	private  function sendEmail($mail_content,$subject,$mail_to,$user_name){
 		$from='ttinvoicing@salesbeacon.com';
@@ -45,17 +48,17 @@ class InvoiceController extends Controller
     		error_log("mail to $mail_to failed");
     	}
 
-}
+	}
 
-public function index6(Request $request){
-	// $user_id=$request->input('user_id');
-	// $invoice_month=$request->input('invoice_month');
-	// $invoice_year=$request->input('invoice_year');
-	// $mail_content= $this->build_invoice_content($invoice_year,$invoice_month);
-	return view('autoinvoice');
+	public function index6(Request $request){
+		// $user_id=$request->input('user_id');
+		// $invoice_month=$request->input('invoice_month');
+		// $invoice_year=$request->input('invoice_year');
+		// $mail_content= $this->build_invoice_content($invoice_year,$invoice_month);
+		return view('autoinvoice');
 
 
-}
+	}
 	public function index(Request $request)
     {
 		$user_id=$request->input('user_id');
@@ -69,13 +72,13 @@ public function index6(Request $request){
 		echo $invoice_content;
 	}
 	
-	private function get_date_range($invoice_year,$invoice_month){
+	private function get_date_range_fromyearmonth($invoice_year,$invoice_month){
 		
 		$start_date=date_create($invoice_year.'-'.$invoice_month.'-01');
 		$end_date=date_sub(date_create($invoice_year.'-'.($invoice_month+1).'-01'),date_interval_create_from_date_string("1 day"));
 
-		$today=date_create(date('Y/m/d H:i:s'));
-		$this->invoice_date=$today->format('Y-m-d');
+		$this->invoice_date=$end_date->format('Y-m-d');
+		$this->invoice_period=$invoice_year."-".sprintf("%02d", $invoice_month);
 		return [
 		"start_date"=>$start_date->format('Y-m-d'),
 		"end_date"=>$end_date->format('Y-m-d'),
@@ -94,7 +97,7 @@ public function index6(Request $request){
 	}
 
 	public function generate_invoice_for_contractors($invoice_year,$invoice_month){
-		$date_range=$this->get_date_range($invoice_year,$invoice_month);
+		$date_range=$this->get_date_range_fromyearmonth($invoice_year,$invoice_month);
 		$start_date=$date_range['start_date'];
 		$end_date=$date_range['end_date'];
 	}
@@ -113,8 +116,15 @@ public function index6(Request $request){
 		return view('autoinvoice_rangedate',array('user_rows'=>$user_rows,'months'=>$months,'resource_types'=>$resource_types));	
 
 	}
+	public function index_paymentsummary(){
+		$user_rows=null;
+		$months=$this->getMonths();
+		return view('payment_summary_generate',array('months'=>$months));	
+	}
+
+	
 	public function get_users_rangedate(Request $request){
-		$usertypeselect1=$request->input('usertypeselect1');
+		$usertypeselect=$request->input('usertypeselect1');
 		$start_date=$request->input('FromDate');
 		$end_date=$request->input('ToDate');
 
@@ -123,37 +133,43 @@ public function index6(Request $request){
 		->join('project_resource as pr','te.entry_project_resource_id','pr.project_resource_id')
 		->join('users as u','u.user_id','pr.project_resource_resource_id')
 		->leftjoin('resource_employment_status as res','res.resource_employment_status_id','u.user_resource_status_id')
-		->where([
-			['te.entry_deleted','0'],
-			['res.resource_status',$usertypeselect1],
-		])
+		->where('te.entry_deleted','0')
+		->whereIn('res.resource_status',$usertypeselect)		
 		->whereBetween('te.entry_date', [$start_date, $end_date])
-		->selectRaw('distinct u.user_id,u.user_email,u.user_name,u.user_lastname,res.resource_status')
+		->selectRaw('distinct u.user_id,u.user_email,u.user_name,u.user_lastname,res.resource_status,u.user_billing_name')
 		->orderBy('res.resource_status')->orderBy('u.user_email')->orderBy('u.user_lastname');
-		
+		//$sql = str_replace_array('?', $query->getBindings(), $query->toSql()); 
+		//dd($sql);
+	
 		$user_rows = $query->get();
 	
 		$months=$this->getMonths();
 		$resource_types=$this->get_resource_status();	
 		return view('autoinvoice_rangedate',array('user_rows'=>$user_rows,'months'=>$months,'resource_types'=>$resource_types,
-		'usertypeselect1'=>$usertypeselect1,
+		'usertypeselect1'=>null,
 		'start_date'=>$start_date,
 		'end_date'=>$end_date,
 	));	
 	}
+	
 	public function get_users_monthly(Request $request){
 		$usertypeselect1=$request->input('usertypeselect1');
+		$usertypeselect=$request->input('multi_usertypes');
 		$date_selection=$request->input('date_selection');
 		// $date_from =$request->input('FromDate');
 		// $date_to=$request->input('ToDate');
 
 
+		$usertypes = $usertypeselect1;
 		$dates = explode('-', $date_selection);
 		$user_rows=[];
+
+		$a=['consultant','contractor'];
+		$b=array($usertypes);
 		if(isset($dates)&& count($dates)>1){		
 			$invoice_year=$dates[0];
 			$invoice_month=$dates[1];
-			$date_range=$this->get_date_range($invoice_year,$invoice_month);
+			$date_range=$this->get_date_range_fromyearmonth($invoice_year,$invoice_month);
 			$start_date=$date_range['start_date'];
 			$end_date=$date_range['end_date'];
 	
@@ -162,20 +178,21 @@ public function index6(Request $request){
 			->join('project_resource as pr','te.entry_project_resource_id','pr.project_resource_id')
 			->join('users as u','u.user_id','pr.project_resource_resource_id')
 			->leftjoin('resource_employment_status as res','res.resource_employment_status_id','u.user_resource_status_id')
-			->where([
-				['te.entry_deleted','0'],
-				['res.resource_status',$usertypeselect1],
-			])
+			->where('te.entry_deleted','0')
+			->whereIn('res.resource_status',$usertypes)
+			//->whereIn('res.resource_status',['consultant','contractor'])
 			->whereBetween('te.entry_date', [$start_date, $end_date])
-			->selectRaw('distinct u.user_id,u.user_email,u.user_name,u.user_lastname,res.resource_status')
+			->selectRaw('distinct u.user_id,u.user_email,u.user_name,u.user_lastname,res.resource_status,u.user_billing_name')
 			->orderBy('res.resource_status')->orderBy('u.user_email')->orderBy('u.user_lastname');
-			
+			//$sql = str_replace_array('?', $query->getBindings(), $query->toSql()); 
+			//dd($sql);
+
 			$user_rows = $query->get();
 		}
 		
 		$months=$this->getMonths();
 		$resource_types=$this->get_resource_status();	
-		return view('autoinvoice_monthly',array('user_rows'=>$user_rows,'months'=>$months,'resource_types'=>$resource_types,'usertypeselect1'=>$usertypeselect1,'date_selection'=>$date_selection));	
+		return view('autoinvoice_monthly',array('user_rows'=>$user_rows,'months'=>$months,'resource_types'=>$resource_types,'usertypeselect1'=>$usertypeselect,'date_selection'=>$date_selection));	
 
 
 	}
@@ -221,71 +238,398 @@ public function index6(Request $request){
 	public function generate_invoices_rangedate(Request $request){
 		$invoice_content='';
 		$user_rows = $request->input('check_list','selected');
-		
-
 		$usertypeselect1=$request->input('usertypeselect1');
 		$start_date=$request->input('FromDate');
 		$end_date=$request->input('ToDate');
-	foreach($user_rows as $user_row){
+
+
+		$summary_report = $request->input('summary_report');
+		$user_ids=[];
+		foreach($user_rows as $user_row){
+			$user_info=explode('-',$user_row);
+			$user_id=$user_info[0];
+			$user_email=$user_info[3];
+			$user_name=$user_info[1].' ' . $user_info[2];
+
+			array_push($user_ids,$user_id);
+		}
+
+		$invoice_content='';
+		$invoice_html='';
+		$summary_report_html='';
+		$CAD_users=[];
+		$USD_users=[];
+		$total_info_CADUsers=[];
+		$total_info_USDUsers=[];
+
+
+
+		foreach($user_rows as $user_row){
 				$user_info=explode('-',$user_row);
 				$user_id=$user_info[0];
 				$user_email=$user_info[3];
 				$user_name=$user_info[1].' ' . $user_info[2];
-				$invoice_period=$start_date."-".$end_date;
-				$invoice_number=$user_id . "-" . $invoice_period;
-				$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
-				$invoice_data=$this->generate_invoice(0,$user_id,$start_date,$end_date,$invoice_number,$invoice_period);
+				$this->invoice_date=$end_date;
+				$this->invoice_period=date_format(date_create($start_date),'Y/m/d').'-'.date_format(date_create($end_date),'Y/m/d');
+				$invoice_number=$user_id . "-" . $this->invoice_period;
+				$invoice_number='Not Invoice';
+				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
+				$invoice_data=$this->generate_invoice(0,$user_id,$start_date,$end_date,$invoice_number,$this->invoice_period);
 				
 				$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
 	
-				$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
+				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
 				$invoice_content.=$invoice_html;
 				
 				//$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
 			
-			echo $invoice_content;
+			//echo $invoice_content;
 			
 		
 		}
+
+		if($summary_report === 'on'){
+			$this->invoice_period='';
+			$query=DB::table('time_entry as te')
+			->join('project_resource as pr','te.entry_project_resource_id','pr.project_resource_id')
+			->join('users as u','u.user_id','pr.project_resource_resource_id')
+			->where([['te.entry_deleted','0'],['u.user_currency','CAD']])
+			->whereBetween('te.entry_date', [$start_date, $end_date])
+			->whereIn('u.user_id', $user_ids)
+			->groupBy('u.user_id')
+			->selectRaw('u.user_id,concat(user_name," ",user_lastname)username,SUM(te.entry_hours) * pr.project_resource_sales_beacon_rate billedwork,u.user_currency,u.user_tax,user_health_plan_deduction,user_rrsp_deduction,user_billing_name')
+			;
+
+
+			$user_rows = $query->get();
+
+
+			if(isset($user_rows)&& count($user_rows)>0){
+				$group_currency='';
+				$total_billedwork_CADUsers=0.00;
+				$total_GST_CADUsers=0.00;
+				$total_subtotal_CADUsers=0.00;
+				$total_meddeduction_CADUsers=0.00;
+				$total_rrspdeduction_CADUsers=0.00;
+				$total_CADUsers=0.00;
+				$total_billedwork_USDUsers=0.00;
+				$total_GST_USDUsers=0.00;
+				$total_subtotal_USDUsers=0.00;
+				$total_meddeduction_USDUsers=0.00;
+				$total_rrspdeduction_USDUsers=0.00;
+				$total_USDUsers=0.00;
+
+				$subtotal_employees;
+
+			foreach($user_rows as $user_row){
+
+					$billedwork=$user_row->billedwork;
+					$user_currency=$user_row->user_currency;
+					$user_billing_name=$user_row->user_billing_name;
+					$user_name=$user_row->username;
+					$user_tax=$user_row->user_tax;
+					$gst=$billedwork*$user_tax;
+					$subtotal=$billedwork+$gst;
+					$user_health_plan_deduction=$user_row->user_health_plan_deduction;
+					$user_rrsp_deduction=$user_row->user_rrsp_deduction;
+					$user_total=$subtotal-$user_health_plan_deduction-$user_rrsp_deduction;
+
+
+					$user_info=[
+						"billedwork"=>$billedwork,
+						"user_tax"=>$gst,
+						"subtotal"=>$subtotal,
+						"user_health_plan_deduction"=>$user_health_plan_deduction,
+						"user_rrsp_deduction"=>$user_rrsp_deduction,
+						"user_currency"=>$user_currency,
+						"user_billing_name"=>$user_billing_name,
+						"user_name"=>$user_name,
+						"user_total"=>$user_total
+					];
+
+					if($group_currency==='' || $user_currency==$group_currency){
+						if($user_currency==='CAD'){
+							$total_billedwork_CADUsers+=$billedwork;
+							$total_GST_CADUsers+=$gst;
+							$total_subtotal_CADUsers+=$subtotal;
+							$total_meddeduction_CADUsers+=$user_health_plan_deduction;
+							$total_rrspdeduction_CADUsers+=$user_rrsp_deduction;
+							$total_CADUsers+=$user_total;
+
+							array_push($CAD_users,$user_info);
+					}else{
+						$group_currency=$user_currency;
+						$total_billedwork_USDUserss+=$billedwork;
+						$total_GST_USDUserss+=$gst;
+						$total_subtotal_USDUserss+=$subtotal;
+						$total_meddeduction_USDUserss+=$user_health_plan_deduction;
+						$total_rrspdeduction_USDUserss+=$user_rrsp_deduction;
+						$total_USDUsers+=$user_total;
+						array_push($USD_users,$user_info);
+						}
+
+					}	
+
+				}
+				$total_info_CADUsers=[
+					"total_billedwork_CADUsers"=>$total_billedwork_CADUsers,
+					"total_GST_CADUsers"=>$total_GST_CADUsers,
+					"total_subtotal_CADUsers"=>$total_subtotal_CADUsers,
+					"total_meddeduction_CADUsers"=>$total_meddeduction_CADUsers,
+					"total_rrspdeduction_CADUsers"=>$total_rrspdeduction_CADUsers,
+					"total_CADUsers"=>$total_CADUsers,
+					"currency"=>'CAD'
+				];
+				$total_info_USDUsers=[
+					"total_billedwork_USDUsers"=>$total_billedwork_USDUsers,
+					"total_GST_USDUsers"=>$total_GST_USDUsers,
+					"total_subtotal_USDUsers"=>$total_subtotal_USDUsers,
+					"total_meddeduction_USDUsers"=>$total_meddeduction_USDUsers,
+					"user_rrsp_deduction"=>$user_rrsp_deduction,
+					"total_rrspdeduction_USDUsers"=>$total_rrspdeduction_USDUsers,
+					"total_USDUsers"=>$total_USDUsers,
+					"currency"=>'USD'
+				];
+				$report_date=date('Y-m-d');
+
+				
+				$summary_report_html=view('payment_summary_generate',
+				array("report_date"=>$report_date,
+					"invoice_date"=>$this->invoice_date,
+					"invoice_period"=>$this->invoice_period,
+					'CAD_users'=>$CAD_users,
+					'USD_users'=>$USD_users,
+					'total_info_CADUsers'=>$total_info_CADUsers,
+					'total_info_USDUsers'=>$total_info_USDUsers
+					));	
+			}
+			else{
+				//show page with messahe "no valid payment summary report"
+	
+			}	
+		}
+		echo $invoice_content.$summary_report_html;
+
 	}
-public function generate_invoices_monthly(Request $request){
+	
+	public function generate_payment_summary(Request $request){
+
+		$date_selection=$request->input('date_selection');
+		$dates = explode('-', $date_selection);
+		$user_rows=[];
+		if(isset($dates)&& count($dates)>1){		
+			$invoice_year=$dates[0];
+			$invoice_month=$dates[1];
+			$date_range=$this->get_date_range_fromyearmonth($invoice_year,$invoice_month);
+			$start_date=$date_range['start_date'];
+			$end_date=$date_range['end_date'];
+	
+			$query=DB::table('time_entry as te')
+			->join('project_resource as pr','te.entry_project_resource_id','pr.project_resource_id')
+			->join('users as u','u.user_id','pr.project_resource_resource_id')
+			->where([['te.entry_deleted','0'],['u.user_currency','CAD']])
+			->whereBetween('te.entry_date', [$start_date, $end_date])
+			->groupBy('u.user_id')
+			->selectRaw('u.user_id,SUM(te.entry_hours) * pr.project_resource_sales_beacon_rate billedwork,u.user_currency,u.')
+			;
+	
+
+			$user_rows = $query->get();
+			//rows of contractors
+			//subtotal of contractors
+			//rows of employees
+			//subtotal of employees
+
+
+			if(isset($user_rows)&& count($user_rows)>0){
+
+				//$this->generate_payment_summary_report($user_rows,$start_date, $end_date);
+			}
+			else{
+				//show page with messahe "no valid payment summary report"
+	
+			}
+			}
+
+
+	}
+	public function generate_invoices_monthly(Request $request){
 		$invoice_content='';
 		$user_rows = $request->input('check_list','selected');
 		
 
 		$usertypeselect1=$request->input('usertypeselect1');
 		$date_selection=$request->input('date_selection');
-		
+		$summary_report = $request->input('summary_report');
+		$user_ids=[];
+		foreach($user_rows as $user_row){
+			$user_info=explode('-',$user_row);
+			$user_id=$user_info[0];
+			$user_email=$user_info[3];
+			$user_name=$user_info[1].' ' . $user_info[2];
 
+			array_push($user_ids,$user_id);
+		}
 
 
 		$dates = explode('-', $date_selection);
-		
+		$invoice_content='';
+		$invoice_html='';
+		$summary_report_html='';
+		$CAD_users=[];
+		$USD_users=[];
+		$total_info_CADUsers=[];
+		$total_info_USDUsers=[];
+
 		if(isset($dates)&& count($dates)>1){		
 			$invoice_year=$dates[0];
 			$invoice_month=$dates[1];
-			$date_range=$this->get_date_range($invoice_year,$invoice_month);
+			$date_range=$this->get_date_range_fromyearmonth($invoice_year,$invoice_month);
 			$start_date=$date_range['start_date'];
 			$end_date=$date_range['end_date'];
+
 			foreach($user_rows as $user_row){
 				$user_info=explode('-',$user_row);
 				$user_id=$user_info[0];
 				$mail_option=$request->input('mail_option_'.$user_id);
 				$user_email=$user_info[3];
 				$user_name=$user_info[1].' ' . $user_info[2];
-				$invoice_period=$invoice_year."-".sprintf("%02d", $invoice_month);
-				$invoice_number=$user_id . "-" . $invoice_period;
-				$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
-				$invoice_data=$this->generate_invoice(1,$user_id,$start_date,$end_date,$invoice_number,$invoice_period);
+				$this->invoice_period=$invoice_year."-".sprintf("%02d", $invoice_month);
+				$invoice_number=$user_id . "-" . $this->invoice_period;
+				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
+				$invoice_data=$this->generate_invoice(1,$user_id,$start_date,$end_date,$invoice_number,$this->invoice_period);
 				
 				$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
-	
-				$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
-				$invoice_content.=$invoice_html;
-				
+				echo $invoice_html;
+				//$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
+				//$invoice_content.=$invoice_html;
+
+
 				//$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
 			}
-			echo $invoice_content;
+
+
+			if($summary_report === 'on'){
+				$query=DB::table('time_entry as te')
+				->join('project_resource as pr','te.entry_project_resource_id','pr.project_resource_id')
+				->join('users as u','u.user_id','pr.project_resource_resource_id')
+				->where([['te.entry_deleted','0'],['u.user_currency','CAD']])
+				->whereBetween('te.entry_date', [$start_date, $end_date])
+				->whereIn('u.user_id', $user_ids)
+				->groupBy('u.user_id')
+				->selectRaw('u.user_id,concat(user_name," ",user_lastname)username,SUM(te.entry_hours) * pr.project_resource_sales_beacon_rate billedwork,u.user_currency,u.user_tax,user_health_plan_deduction,user_rrsp_deduction,user_billing_name')
+				;
+	
+	
+				$user_rows = $query->get();
+	
+	
+				if(isset($user_rows)&& count($user_rows)>0){
+					$group_currency='';
+					$total_billedwork_CADUsers=0.00;
+					$total_GST_CADUsers=0.00;
+					$total_subtotal_CADUsers=0.00;
+					$total_meddeduction_CADUsers=0.00;
+					$total_rrspdeduction_CADUsers=0.00;
+					$total_CADUsers=0.00;
+					$total_billedwork_USDUsers=0.00;
+					$total_GST_USDUsers=0.00;
+					$total_subtotal_USDUsers=0.00;
+					$total_meddeduction_USDUsers=0.00;
+					$total_rrspdeduction_USDUsers=0.00;
+					$total_USDUsers=0.00;
+	
+					$subtotal_employees;
+	
+				foreach($user_rows as $user_row){
+	
+						$billedwork=$user_row->billedwork;
+						$user_currency=$user_row->user_currency;
+						$user_billing_name=$user_row->user_billing_name;
+						$user_name=$user_row->username;
+						$username=$user_row->username;
+						$user_tax=$user_row->user_tax;
+						$gst=$billedwork*$user_tax;
+						$subtotal=$billedwork+$gst;
+						$user_health_plan_deduction=$user_row->user_health_plan_deduction;
+						$user_rrsp_deduction=$user_row->user_rrsp_deduction;
+						$user_total=$subtotal-$user_health_plan_deduction-$user_rrsp_deduction;
+	
+	
+						$user_info=[
+							"billedwork"=>$billedwork,
+							"user_tax"=>$gst,
+							"subtotal"=>$subtotal,
+							"user_health_plan_deduction"=>$user_health_plan_deduction,
+							"user_rrsp_deduction"=>$user_rrsp_deduction,
+							"user_currency"=>$user_currency,
+							"user_billing_name"=>$user_billing_name,
+							"user_name"=>$user_name,
+							"user_total"=>$user_total
+						];
+	
+						if($group_currency==='' || $user_currency==$group_currency){
+							if($user_currency==='CAD'){
+								$total_billedwork_CADUsers+=$billedwork;
+								$total_GST_CADUsers+=$gst;
+								$total_subtotal_CADUsers+=$subtotal;
+								$total_meddeduction_CADUsers+=$user_health_plan_deduction;
+								$total_rrspdeduction_CADUsers+=$user_rrsp_deduction;
+								$total_CADUsers+=$user_total;
+	
+								array_push($CAD_users,$user_info);
+						}else{
+							$group_currency=$user_currency;
+							$total_billedwork_USDUserss+=$billedwork;
+							$total_GST_USDUserss+=$gst;
+							$total_subtotal_USDUserss+=$subtotal;
+							$total_meddeduction_USDUserss+=$user_health_plan_deduction;
+							$total_rrspdeduction_USDUserss+=$user_rrsp_deduction;
+							$total_USDUsers+=$user_total;
+							array_push($USD_users,$user_info);
+							}
+	
+						}	
+	
+					}
+					$total_info_CADUsers=[
+						"total_billedwork_CADUsers"=>$total_billedwork_CADUsers,
+						"total_GST_CADUsers"=>$total_GST_CADUsers,
+						"total_subtotal_CADUsers"=>$total_subtotal_CADUsers,
+						"total_meddeduction_CADUsers"=>$total_meddeduction_CADUsers,
+						"total_rrspdeduction_CADUsers"=>$total_rrspdeduction_CADUsers,
+						"total_CADUsers"=>$total_CADUsers,
+						"currency"=>'CAD'
+					];
+					$total_info_USDUsers=[
+						"total_billedwork_USDUsers"=>$total_billedwork_USDUsers,
+						"total_GST_USDUsers"=>$total_GST_USDUsers,
+						"total_subtotal_USDUsers"=>$total_subtotal_USDUsers,
+						"total_meddeduction_USDUsers"=>$total_meddeduction_USDUsers,
+						"user_rrsp_deduction"=>$user_rrsp_deduction,
+						"total_rrspdeduction_USDUsers"=>$total_rrspdeduction_USDUsers,
+						"total_USDUsers"=>$total_USDUsers,
+						"currency"=>'USD'
+					];
+					$report_date=date('Y-m-d');
+					
+					$summary_report_html=view('payment_summary_generate',
+					array("report_date"=>$report_date,
+						'invoice_date'=>$this->invoice_date,
+						'invoice_period'=>$this->invoice_period,
+						'CAD_users'=>$CAD_users,
+						'USD_users'=>$USD_users,
+						'total_info_CADUsers'=>$total_info_CADUsers,
+						'total_info_USDUsers'=>$total_info_USDUsers
+						));	
+				}
+				else{
+					//show page with messahe "no valid payment summary report"
+		
+				}	
+			}
+			echo $invoice_content.$summary_report_html;
+			//echo $summary_report_html;
 			
 		
 		}
@@ -296,17 +640,12 @@ public function generate_invoices_monthly(Request $request){
         ->join('project_resource as pr','te.entry_project_resource_id','pr.project_resource_id')
 		->join('users as u','u.user_id','pr.project_resource_resource_id')
 		->leftjoin('resource_employment_status as res','res.resource_employment_status_id','u.user_resource_status_id')
-		->where([
-			['te.entry_deleted','0'],
-			['res.resource_status','contractor'],
-        ])
+		->where('te.entry_deleted','0')
+		->whereIn('res.resource_status',['Consultant', 'Contractor', 'Corp to Corp', 'Freelance', 'US Consultant', 'US Contractor', 'US Corp to Corp', 'US Freelance'])
 		->whereBetween('te.entry_date', [$start_date, $end_date])
 		->selectRaw('distinct u.user_id,u.user_email,u.user_name,u.user_lastname')
-		->orderBy('res.resource_status')->orderBy('u.user_email')->orderBy('u.user_lastname')
+		->orderBy('u.user_email')->orderBy('u.user_lastname')
 		;
-		//$sql = str_replace_array('?', $query->getBindings(), $query->toSql()); 
-		//dd($sql);
-
 		
 		$user_rows = $query->get();		
 		foreach($user_rows as $user_row){
@@ -359,21 +698,19 @@ public function generate_invoices_monthly(Request $request){
 	}
 	private function generate_invoice_for_contractor_monthly($invoice_year,$invoice_month){
 
-		$invoice_period=$invoice_year."-".sprintf("%02d", $invoice_month);
-		$date_range=$this->get_date_range($invoice_year,$invoice_month);
+		$this->invoice_period=$invoice_year."-".sprintf("%02d", $invoice_month);
+		$date_range=$this->get_date_range_fromyearmonth($invoice_year,$invoice_month);
 		$start_date=$date_range['start_date'];
 		$end_date=$date_range['end_date'];
-		$this->build_invoice_for_contractor_monthly($start_date,$end_date,$invoice_period);
+		$this->build_invoice_for_contractor_monthly($start_date,$end_date,$this->invoice_period);
 	}
 	private function generate_biweeklyreport_for_employees($invoice_date){
 		$end_date=date_sub(date_create($invoice_date),date_interval_create_from_date_string("1 day"));
 		$start_date=date_sub(date_create($invoice_date),date_interval_create_from_date_string("14 days"));
-		$today=date_create(date('Y/m/d H:i:s'));
-		$this->invoice_date=$today->format('Y-m-d');
-		$invoice_period=$start_date->format('Y-m-d')." to ".$end_date->format('Y-m-d');
+		$this->invoice_date=date_format(date_create($invoice_date),'Y-m-d');
+		$this->invoice_period=date_format($start_date,'Y/m/d')." to ".date_format($end_date,'Y/m/d');
 		$invoice_number='Not an Invoice';
-		
-		$this->build_biweeklyreport_content($start_date,$end_date,$invoice_number,$invoice_period);
+		$this->build_biweeklyreport_content($start_date,$end_date,$invoice_number,$this->invoice_period);
 	}
 
 	private function generate_invoice($isInvoice,$user_id,$start_date,$end_date,$invoice_number,$invoice_period){
@@ -470,7 +807,7 @@ public function generate_invoices_monthly(Request $request){
 		];
 
 
-		$invoice_info=['invoice_number'=>$invoice_number,'invoice_date'=>$this->invoice_date,'invoice_period'=>$invoice_period];
+		$invoice_info=['invoice_number'=>$invoice_number,'invoice_date'=>$this->invoice_date,'invoice_period'=>$this->invoice_period];
 		return [
 			'invoice_info'=>$invoice_info,
 			'user_info'=>$user_info,
@@ -479,5 +816,6 @@ public function generate_invoices_monthly(Request $request){
 			'total_data'=>$total_data
 		];
 	}
+
 }
 	

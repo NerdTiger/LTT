@@ -146,7 +146,7 @@ EOF1
 						<td>
 						<select name='$user_id' disabled>
 							<option value='mdinacontractor'>Generate Invoice Mail to Sales Beacon/Contractor</option>
-							<option value='contractor'>Generate Invoice Mail to Contractor Only</option>
+							<option value='contractor'>Generate Invoice Mail to Resource Only</option>
 							<option value='mdina'>Generate Invoice Mail to Sales Beacon Only</option>
 						</select>
 						</td>
@@ -160,7 +160,7 @@ EOF1
 						<td>
 						<select name='$user_id'>
 							<option value='mdinacontractor'>Generate Invoice Mail to Sales Beacon/Contractor</option>
-							<option value='contractor'>Generate Invoice Mail to Contractor Only</option>
+							<option value='contractor'>Generate Invoice Mail to Resource Only</option>
 							<option value='mdina'>Generate Invoice Mail to Sales Beacon Only</option>
 						</select>
 						</td>

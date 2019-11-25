@@ -135,7 +135,7 @@
         <td>1</td>
         <td>$-{{number_format($invoice_data['med_rrsp']['project_MED']['project_cost'],2)}}</td>
         </tr>
-@endif
+        @endif
         
         @if(isset($invoice_data['med_rrsp']['project_RRSP']) && count($invoice_data['med_rrsp']['project_RRSP'])>0) 
         <tr>

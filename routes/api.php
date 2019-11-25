@@ -77,7 +77,7 @@ Route::get('/listHourforProjectClientManager','EntryController@listHourforProjec
 
 // admin controller 
 
-Route::get('/login/getuserlogininfo','LoginController@getuserlogininfo');
+Route::get('/login/getuserlogininfo','TTLoginController@getuserlogininfo');
 
 
 Route::get('/ajax',function() {

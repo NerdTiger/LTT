@@ -24,26 +24,29 @@
 //     return view('SelectDemo');
 // })->name('SelectDemo');
 
-//Auth::routes(['register' => false]);
+Auth::routes(['register' => false]);
 Auth::routes();
 
 //Route::get('/', '/project/index');
 //Route::get('/', 'ProjectController@index');
 Route::get('/', function () {
     return view('welcome');
+    
 
 });
-    
-//Route::get('/autoinvoicer', 'InvoiceController@index');
-Route::get('/autoinvoice/index', 'InvoiceController@index');
-Route::get('/autoinvoice/index_monthly', 'InvoiceController@index_monthly')->name('index_monthly');//through schedule job
-Route::get('/autoinvoice/index_rangedate', 'InvoiceController@index_rangedate')->name('index_rangedate');//through schedule job
 
-Route::post('/listusers_monthly', 'InvoiceController@get_users_monthly')->name('listusers_monthly');//get contractor users for monthly invoice 
-Route::post('/listusers_rangedate', 'InvoiceController@get_users_rangedate')->name('listusers_rangedate');//get hourly users for biweekly payment
+//Route::get('/signout', 'LoginController@OK')->name('signout');//UI
+
+Route::get('/autoinvoice/index_monthly', 'InvoiceController@index_monthly')->name('index_monthly');//UI
+Route::get('/autoinvoice/index_rangedate', 'InvoiceController@index_rangedate')->name('index_rangedate');//UI
+//Route::get('/autoinvoice/index_paymentsummary', 'InvoiceController@index_paymentsummary')->name('index_paymentsummary');//UI
+
+Route::post('/listusers_monthly', 'InvoiceController@get_users_monthly')->name('listusers_monthly');//get users for monthly invoice 
+Route::post('/listusers_rangedate', 'InvoiceController@get_users_rangedate')->name('listusers_rangedate');//get users for biweekly payment
+
 Route::post('/generateinvoice_monthly', 'InvoiceController@generate_invoices_monthly')->name('generateinvoice_monthly');//generate invoice for users for monthly invoice 
 Route::post('/generateinvoice_rangedate', 'InvoiceController@generate_invoices_rangedate')->name('generateinvoice_rangedate');//generate payment for hourly users for biweekly payment
-//Route::get('/autoinvoice/getvalidusers', 'InvoiceController@get_valid_users');
+//Route::post('/generate_payment_summary', 'InvoiceController@generate_payment_summary')->name('generate_payment_summary');//generate payment for hourly users for biweekly payment
 
 
 

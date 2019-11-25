@@ -69007,23 +69007,6 @@ Vue.use(vue_axios__WEBPACK_IMPORTED_MODULE_1___default.a, axios__WEBPACK_IMPORTE
 
 
 
-/*
-
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-Vue.component('HeaderComponent', HeaderComponent);
-*/
-//Vue.component('ExampleComponent', require('./components/ExampleComponent.vue'));
-// Vue.component('TtadminMenuitems', require('./components/menuitems/ttadmin_menuitems.vue'));
-// Vue.component('UserMenuitems', require('./components/menuitems/user_menuitems.vue'));
-
 Vue.component('TTViewComponent', _components_TTViewComponent_vue__WEBPACK_IMPORTED_MODULE_4__["default"]);
 Vue.component('HeaderComponent', _components_HeaderComponent_vue__WEBPACK_IMPORTED_MODULE_8__["default"]);
 Vue.component('ProjectListComponent', _components_ProjectListComponent_vue__WEBPACK_IMPORTED_MODULE_9__["default"]);

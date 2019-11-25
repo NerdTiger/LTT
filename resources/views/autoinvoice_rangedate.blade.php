@@ -9,40 +9,56 @@
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
         <link href="https://timetracker.salesbeacon.com/css/mdina-worx.css" rel="stylesheet" type="text/css" />
-        <!-- <link href="{{ mix('css/app.css') }}" type="text/css" rel="stylesheet" /> -->
-        <SCRIPT LANGUAGE="JavaScript">
-		function checkAllProjects() //checks & unchecks elements in a DIV: contractorlist
-			{
-				var collection = document.getElementById('contractorlist').getElementsByTagName('input');
-				//alert(collection.length);
-				for (var x=0; x<collection.length; x++) 
-					{
-						if (collection[x].type.toUpperCase()=='CHECKBOX')
-							{
-								if (collection[x].checked == true)//if it is checked, uncheck-it
-									{
-										collection[x].checked = false;
-										//document.contractor.Check_All.value="Check All
-										document.getElementById('Check_All').value="Check All
-									}
-									
-								else //if it is not checked, check it
-									{
-										collection[x].checked = true;
-										//document.contractor.Check_All.value="UnCheck All
-										document.getElementById('Check_All').value="Uncheck All
-									}
-							}
-					}
-			}	
+        <link href="{{ mix('css/app.css') }}" type="text/css" rel="stylesheet" />
 
-		</script>
+        <!-- Styles -->
+        <link href="{{ asset('/css/app.css') }}" rel="stylesheet">
+
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.css" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
+        <script type="text/javascript">
+        
+        function selectAllMailRecipients(thisitem) 
+        {
+            if(thisitem.value==='Resource Only'){
+            var ttt=$('[propid="invoicetoContractorOnly"]');
+            ttt.each(function(i,e){
+            e.checked=true;
+                });
+            }
+            if(thisitem.value==='Sales Beacon Only'){
+            var ttt=$('[propid="invoicetoSalesBeaconOnly"]');
+            ttt.each(function(i,e){
+            e.checked=true;
+                });
+            }
+            if(thisitem.value==='Both'){
+            var ttt=$('[propid="invoicetoBoth"]');
+            ttt.each(function(i,e){
+            e.checked=true;
+                });
+            }
+        }	
+        function selectAllUsers() 
+        {
+            //console.log(thisitem.value);
+            var ttt=$('[name="check_list[]"]');
+            ttt.each(function(i,e){
+            e.checked=true;
+                });
+
+        }	
+
+		</script>    
         <script src="https://timetracker.salesbeacon.com/java/date_picker.js" language="javascript"></script>
         <img src='https://timetracker.salesbeacon.com/images/mdina_logo_time_tracking.jpg'>
         <!-- <meta name="csrf-token" value="{{ csrf_token() }}" /> -->
         
-                <!-- Styles -->
-                <link href="{{ asset('/css/app.css') }}" rel="stylesheet">
 
         <style>
             html, body {
@@ -99,107 +115,153 @@
                 text-align:left;
                 padding-left:0;
             }
+            .accessbutton{
+            border-radius:3em;
+            background-color:#33b5e5 ;
+
+            }
         </style>
     </head>
     <body>
-        <div id="app">
-        
-                <div class="content">
-                
-                <div id='showrange' name='showrange' style='display:block'>
-                <b>
-                <a href="{{ route('index_monthly') }}"> Click here to generate a Monthly Report</a>
-               
-                <form action="{{ route('listusers_rangedate') }}" method='post' >
-                @csrf
-                </b><br />
-                <b><p>
-                <select name='usertypeselect1'>
-                <option value='0'></option>
-                    @foreach($resource_types as $resource_type)
-                        @if (isset($usertypeselect1)&& $usertypeselect1===$resource_type->resource_status)
-                        <option value="{{$resource_type->resource_status}}" selected>{{$resource_type->resource_status}} </option>
+        <div id="app">        
+            <div class="content">
+                <div id='showrange' name='showrange' style='padding-left:15px;display:block'>
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-3 col-sm-left" >Generate a Date Rage report</div>
+                            <div class="col-3 col-sm-left" >
+                            <a href="{{ route('index_monthly') }}" class="btn btn-default accessbutton"> Generate a Monthly Report</a>
+                            
+                            </b><br />
+                            </div>
+                            <div class="col-6 col-sm-left" >
+
+                            </div>
+
+                        </div>
                         
-                        @else
-                        <option value="{{$resource_type->resource_status}}" >{{$resource_type->resource_status}} </option>
+                        <div class="row">
+                            <div class="col-8 col-sm-left" >
+                                <form action="{{ route('listusers_rangedate') }}" method='post' >
+                                    @csrf
+                                    <select name='usertypeselect1[]' class="selectpicker" multiple data-live-search="true">
+                                    <option value='0'></option>
+
+                                        @foreach($resource_types as $resource_type)
+                                        @if (isset($usertypeselect1)&& $usertypeselect1===$resource_type->resource_status)
+                                        <option value="{{$resource_type->resource_status}}" selected>{{$resource_type->resource_status}} </option>
+                                        
+                                        @else
+                                        <option value="{{$resource_type->resource_status}}" >{{$resource_type->resource_status}} </option>
+                                        @endif
+                                        
+                                    @endforeach
+                                    </select>
+
+                                    @if(isset($start_date) && isset($end_date))
+                                    From:</b> <input type="text" onclick="displayDatePicker('FromDate');" value="{{$start_date}}" maxlength="12" size="10" name="FromDate"> 
+                                    <b>To:</b> <input type="text" onclick="displayDatePicker('ToDate');" value="{{$end_date}}" maxlength="12" size="10" name="ToDate">
+                                    @else
+                                        From:</b> 
+                                    <input type="text" onclick="displayDatePicker('FromDate');" value="Start Date" maxlength="12" size="10" name="FromDate"> 
+                                    <b>
+                                    To:</b> 
+                                    <input type="text" onclick="displayDatePicker('ToDate');" value="End Date" maxlength="12" size="10" name="ToDate">
+                                    @endif
+                                    <input type='submit' class="btn btn-primary " onclick='if($("[name=FromDate]").val() == "Start Date" || $("[name=ToDate]").val() == "End Date" || ($(".selectpicker option:selected").length==0)){return false;}' value='Filter'></p>
+                                </form>
+                            </div>                
+                            <div class="col-4 col-sm-left" ></div>
+                        </div>
+                    </div>
+                </div>
+                <div name='contractorlist' id='contractorlist'>
+                    <form action="{{ route('generateinvoice_rangedate') }}" method='post' name='contractor' id='contractor'>
+                        @csrf
+                        @if(isset($start_date))
+                        <input type='hidden' name ='FromDate' value='{{$start_date}}'>
                         @endif
-                    @endforeach
-                    </select>    
-                @if(isset($start_date) && isset($end_date))
-                From:</b> <input type="text" onclick="displayDatePicker('FromDate');" value="{{$start_date}}" maxlength="12" size="10" name="FromDate"> 
-                <b>To:</b> <input type="text" onclick="displayDatePicker('ToDate');" value="{{$end_date}}" maxlength="12" size="10" name="ToDate">
-                @else
-                    From:</b> 
-                <input type="text" onclick="displayDatePicker('FromDate');" value="Start Date" maxlength="12" size="10" name="FromDate"> 
-                <b>
-                To:</b> 
-                <input type="text" onclick="displayDatePicker('ToDate');" value="End Date" maxlength="12" size="10" name="ToDate">
-                @endif
-                    <input type='submit' onclick='document.getElementById("monthselect").value=""' value='Apply Range Filter'></p>
-                    <br /><font color = 'red'>Please click "Apply Range Filter" to make your range selection</font>
-                    </form>
-                    </div>
-            
-                </p>
-            
-            <div name='contractorlist' id='contractorlist'>
-                <form action="{{ route('generateinvoice_rangedate') }}" method='post' name='contractor' id='contractor'>
-                @csrf
+                        @if(isset($end_date))
+                        <input type='hidden' name ='ToDate' value='{{$end_date}}'>
+                        @endif
 
-                    @if(isset($start_date))
-                    <input type='hidden' name ='FromDate' value='{{$start_date}}'>
-                    @endif
-                    @if(isset($end_date))
-                    <input type='hidden' name ='ToDate' value='{{$end_date}}'>
-                    @endif
+                        @if(isset($usertypeselect1)) 
+                        <input type='hidden' name ='usertypeselect1' value='{{$usertypeselect1}}'>
+                        @endif
 
-                    @if(isset($usertypeselect1)) 
-                    <input type='hidden' name ='usertypeselect1' value='{{$usertypeselect1}}'>
-                    @endif
+                        @if(isset($user_rows))
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-5 col-sm-left" >Generate Invoice Mail to</div>
+                                <div class="col-7">
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col-3 col-sm-left" >
+                                            Resource Only<input type="radio" name="mail_option_all" onclick="selectAllMailRecipients(this)" value="Resource Only"> 
+                                            </div>
+                                            <div class="col-4">
+                                            Sales Beacon Only<input type="radio" name="mail_option_all" onclick="selectAllMailRecipients(this)" value="Sales Beacon Only"> 
+                                            </div>
+                                            <div class="col-2">
+                                            Both<input type="radio" checked name="mail_option_all" onclick="selectAllMailRecipients(this)" value="Both"> 
+                                            </div>
+                                            <div class="col-3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>        
+                        <br/><br/><br/>
+                        <div class="container">
+                            @foreach($user_rows as $user_row)
+                            <div class="row">
+                                <div class="col-3 col-sm-left">
+                                    <input type='checkbox' name='check_list[]' id='{{$user_row->user_id}}' value='{{$user_row->user_id}}-{{$user_row->user_name}}-{{$user_row->user_lastname}}-{{$user_row->user_email}}'>{{$user_row->user_name}} {{$user_row->user_lastname}}
+                                </div>
+                                <div class="col-2">
+                                {{$user_row->resource_status}}
+                                </div>
+                                <div class="col-7">
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col-3 col-sm-left" >
+                                            Resource Only<input type="radio" propid="invoicetoContractorOnly" name="mail_option_{{$user_row->user_id}}" value="Resource Only"> 
+                                            </div>
+                                            <div class="col-4">
+                                            Sales Beacon Only<input type="radio" propid="invoicetoSalesBeaconOnly" name="mail_option_{{$user_row->user_id}}" value="Sales Beacon Only"> 
+                                            </div>
+                                            <div class="col-2">
+                                            Both<input type="radio" checked propid="invoicetoBoth" name="mail_option_{{$user_row->user_id}}" value="Both"> 
+                                            </div>
+                                            <div class="col-3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                            <br>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-1 col-sm-left">
+                                    <input type='button' id='Check_All' value='Check All' name='Check_All' onclick='selectAllUsers()'>
+                                    </div>
+                                    <div class="col-1 col-sm-left">
+                                    <div class="row"><input type='submit' value='Generate' onclick="if($('[name=\'check_list[]\']:checked').length=='0') return false;";></div>
+                                    </div>
+                                    <div class="col-2">
+                                    <input type='checkbox' name='summary_report' >Summary Report
+                                    </div>
+                                    <div class="col-8 col-sm-left">
+                                    
 
-                    @if(isset($user_rows))
-                    <div class="container">
-                        <div class="row">Generate Invoice Mail to</div>
-                        <div class="row">
-                            <div class="col-2 col-sm-left" >
-                            Contractor Only<input type="radio" name="invoiceto" value="Contractor Only"> 
-                            </div>
-                            <div class="col-2">
-                            Sales Beacon Only<input type="radio" name="invoiceto" value="Sales Beacon Only"> 
-                            </div>
-                            <div class="col-2">
-                            Both<input type="radio" name="invoiceto" value="Both"> 
-                            </div>
-                            <div class="col-6"></div>
+                                    </div>
+                                </div>
+                            </div>                            
                         </div>
-                    </div>
-                    <br/>                    <br/><br/>
-                    <div class="container">
-                        
-                    @foreach($user_rows as $user_row)
-                        <div class="row">
-                            <div class="col-4">
-                            <input type='checkbox' name='check_list[]' id='{{$user_row->user_id}}' value='{{$user_row->user_id}}-{{$user_row->user_name}}-{{$user_row->user_lastname}}-{{$user_row->user_email}}'>{{$user_row->user_name}} {{$user_row->user_lastname}}
-                            </div>
-                            <div class="col-1">
-                            {{$user_row->resource_status}}
-                            </div>
-                            <div class="col-10"></div>
-                        </div>
-                    @endforeach
-                    <div class="row"><input type='submit' value='Generate'></div>
-                    </div>
-                    @endif
-                    
-                    <br>
-                    <!-- <input type='button' id='Check_All' value='Check All' name='Check_All' onclick='checkAllProjects()'> -->
+                        @endif
                     </form>               
+                </div>
             </div>
-
-                    
-
-            </div>
-  
         </div>
     </body>
 </html>
