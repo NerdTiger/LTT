@@ -25,8 +25,6 @@ class InvoiceController extends Controller
 		$this->middleware('auth');
 		$this->setup_MailServer();
 		$test_mail_config=Config::get("app.test_mail");		
-		// ["test_accounting_mail_address"=>"kevin.it@salesbeacon.com","test_accounting_mail_username"=>"accounting",],
-		// ["test_enduser_mail_address"=>"kevintigertj@gmailcom","test_enduser_mail_username"=>"Kevin QQ"],
 
 		$this->test_accounting_mail_address=$test_mail_config['accounting'];
 		$this->test_enduser_mail_address=$test_mail_config['enduser'];
@@ -94,7 +92,7 @@ class InvoiceController extends Controller
 			$mail->SetFrom($from);
     		$mail->Subject = $subject;
     		$mail->MsgHTML($mail_content);
-    		$mail->addAddress($mail_to,$user_name); //$mail_to
+		    $mail->addAddress($mail_to,$user_name); 
     		$mail->send();
     	}catch(phpmailerException $e){
     		dd($e);
@@ -104,12 +102,40 @@ class InvoiceController extends Controller
     	if($mail){
 			
 			error_log("mail to $mail_to success");
+			$mail->ClearAllRecipients();
     	}else{
     		error_log("mail to $mail_to failed");
     	}
 
 	}
+	private  function sendEmail_ex($mail_content,$subject,$recipients){
+		$from='ttinvoicing@salesbeacon.com';
 
+        $mail = $this->mail_instance;
+    	try{
+			$mail->SetFrom($from);
+    		$mail->Subject = $subject;
+    		$mail->MsgHTML($mail_content);
+    		foreach($recipients as $recipient){
+    		    $mail->addAddress($recipient['mail_address'],$recipient['mail_username']); 
+    		}
+    		
+    		$mail->send();
+    	}catch(phpmailerException $e){
+    		dd($e);
+    	}catch(Exception $e){
+    		dd($e);
+    	}
+    	if($mail){
+			
+			error_log("mail to  success");
+			$mail->ClearAllRecipients();
+    	}else{
+    		error_log("mail to failed");
+    	}
+
+	}
+	
 	public function index(Request $request)
     {
 		$user_id=$request->input('user_id');
@@ -136,6 +162,7 @@ class InvoiceController extends Controller
 		];
 	}
 	public function cmd_biweekly_invoice($invoice_date='',$check_mail_address='0',$showonpage='0',$it_test='0'){
+		//called from cronjob
 		if($invoice_date==='')return;
 		$this->check_mail_address=empty($check_mail_address)?'0':$check_mail_address;
 		$this->showonpage=empty($showonpage)?'0':$showonpage;
@@ -143,6 +170,7 @@ class InvoiceController extends Controller
 		$this->generate_biweeklyreport_for_employees($invoice_date);
 	}
 	public function cmd_monthly_invoice($invoice_year='',$invoice_month='',$check_mail_address='0',$showonpage='0',$it_test='0'){
+		//called from cronjob
 		if($invoice_month==='')return;
 		if($invoice_year==='')return;
 		$this->check_mail_address=empty($check_mail_address)?'0':$check_mail_address;
@@ -153,7 +181,7 @@ class InvoiceController extends Controller
 
 
 	public function biweekly_invoice(Request $request){
-
+	//called from browser
 		$invoice_date=$request->input('invoice_date');
 		$this->check_mail_address=empty($request->input('check_mail_address'))?'0':$request->input('check_mail_address');
 		$this->showonpage=empty($request->input('showonpage'))?'0':$request->input('showonpage');
@@ -161,7 +189,7 @@ class InvoiceController extends Controller
 		$this->generate_biweeklyreport_for_employees($invoice_date);
 	}
 	public function monthly_invoice(Request $request){
-
+	//called from browser
 		$invoice_month=$request->input('invoice_month');
 		$invoice_year=$request->input('invoice_year');
 		$this->check_mail_address=empty($request->input('check_mail_address'))?'0':$request->input('check_mail_address');
@@ -310,6 +338,12 @@ class InvoiceController extends Controller
 
 	}
 	public function generate_invoices_rangedate(Request $request){
+ 		//called from UI
+		 $test_mail_config=Config::get("app.test_mail");		
+		 $this->check_mail_address=empty($test_mail_config['check_mail_address'])?'0':$test_mail_config['check_mail_address'];
+		 $this->showonpage=empty($test_mail_config['showonpage'])?'0':$test_mail_config['showonpage'];
+		 $this->it_test=empty($test_mail_config['it_test'])?'0':$test_mail_config['it_test'];
+ 
 		$invoice_content='';
 		$user_rows = $request->input('check_list','selected');
 		$usertypeselect1=$request->input('usertypeselect1');
@@ -320,7 +354,7 @@ class InvoiceController extends Controller
 		$summary_report = $request->input('summary_report');
 		$user_ids=[];
 		foreach($user_rows as $user_row){
-			$user_info=explode('-',$user_row);
+			$user_info=explode('$',$user_row);
 			$user_id=$user_info[0];
 			$user_email=$user_info[3];
 			$user_name=$user_info[1].' ' . $user_info[2];
@@ -339,8 +373,9 @@ class InvoiceController extends Controller
 
 
 		foreach($user_rows as $user_row){
-				$user_info=explode('-',$user_row);
+				$user_info=explode('$',$user_row);
 				$user_id=$user_info[0];
+				$mail_option=$request->input('mail_option_'.$user_id);
 				$user_email=$user_info[3];
 				$user_name=$user_info[1].' ' . $user_info[2];
 				$this->invoice_date=$end_date;
@@ -349,8 +384,66 @@ class InvoiceController extends Controller
 				$invoice_number='Not Invoice';
 				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
 				$invoice_data=$this->generate_invoice(0,$user_id,$start_date,$end_date,$invoice_number,$this->invoice_period);
-				
-				$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
+				if($this->check_mail_address==='0'){
+					$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
+					if($this->showonpage==='1'){
+						echo $invoice_html;	
+					}
+					else{
+						$subject = "biweekly payment report $this->invoice_period for $user_name";	
+						if($this->it_test==='1')
+						{
+							if($mail_option==='Resource Only'){
+								$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+							}
+							elseif($mail_option==='Both'){
+								$recipients=[
+								[
+								"mail_address"=>$this->test_accounting_mail_address['mail_address'],
+								"mail_username"=>$this->test_accounting_mail_address['mail_username'],
+								],
+								[
+								"mail_address"=>$this->test_enduser_mail_address['mail_address'],
+								"mail_username"=>$this->test_enduser_mail_address['mail_username'],
+								]
+							    ];
+								$this->sendEmail_ex($invoice_html,$subject,$recipients);
+							}
+							elseif($mail_option==='Sales Beacon Only'){
+								$this->sendEmail($invoice_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
+							}
+						}
+						else {				
+							if($mail_option==='Resource Only'){
+								$this->sendEmail($mail_content,$subject,$user_email,$user_name);
+							}
+							elseif($mail_option==='Both'){
+								$this->sendEmail($mail_content,$subject,$user_email,$user_name);
+								$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+								$recipients=[
+								[
+								"mail_address"=>$this->test_accounting_mail_address['mail_address'],
+								"mail_username"=>$this->test_accounting_mail_address['mail_username'],
+								],
+								[
+								"mail_address"=>$user_email,
+								"mail_username"=>$user_name,
+								]
+							    ];
+								$this->sendEmail_ex($invoice_html,$subject,$recipients);
+								
+							}
+							elseif($mail_option==='Sales Beacon Only'){
+								$this->sendEmail($mail_content,$subject,$user_email,$user_name);
+							}
+						}
+					}
+				}
+				else{
+					$invoice_html=$user_email.'<br/>';	
+					echo $invoice_html;
+				}
+								
 	
 				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
 				$invoice_content.=$invoice_html;
@@ -392,42 +485,41 @@ class InvoiceController extends Controller
 				$subtotal_employees;
 
 			foreach($user_rows as $user_row){
+				$billedwork=$user_row->billedwork;
+				$user_currency=$user_row->user_currency;
+				$user_billing_name=$user_row->user_billing_name;
+				$user_name=$user_row->username;
+				$user_tax=$user_row->user_tax;
+				$gst=$billedwork*$user_tax;
+				$subtotal=$billedwork+$gst;
+				$user_health_plan_deduction=$user_row->user_health_plan_deduction;
+				$user_rrsp_deduction=$user_row->user_rrsp_deduction;
+				$user_total=$subtotal-$user_health_plan_deduction-$user_rrsp_deduction;
 
-					$billedwork=$user_row->billedwork;
-					$user_currency=$user_row->user_currency;
-					$user_billing_name=$user_row->user_billing_name;
-					$user_name=$user_row->username;
-					$user_tax=$user_row->user_tax;
-					$gst=$billedwork*$user_tax;
-					$subtotal=$billedwork+$gst;
-					$user_health_plan_deduction=$user_row->user_health_plan_deduction;
-					$user_rrsp_deduction=$user_row->user_rrsp_deduction;
-					$user_total=$subtotal-$user_health_plan_deduction-$user_rrsp_deduction;
+				$user_info=[
+					"billedwork"=>$billedwork,
+					"user_tax"=>$gst,
+					"subtotal"=>$subtotal,
+					"user_health_plan_deduction"=>$user_health_plan_deduction,
+					"user_rrsp_deduction"=>$user_rrsp_deduction,
+					"user_currency"=>$user_currency,
+					"user_billing_name"=>$user_billing_name,
+					"user_name"=>$user_name,
+					"user_total"=>$user_total
+				];
 
+				if($group_currency==='' || $user_currency==$group_currency){
+					if($user_currency==='CAD'){
+						$total_billedwork_CADUsers+=$billedwork;
+						$total_GST_CADUsers+=$gst;
+						$total_subtotal_CADUsers+=$subtotal;
+						$total_meddeduction_CADUsers+=$user_health_plan_deduction;
+						$total_rrspdeduction_CADUsers+=$user_rrsp_deduction;
+						$total_CADUsers+=$user_total;
 
-					$user_info=[
-						"billedwork"=>$billedwork,
-						"user_tax"=>$gst,
-						"subtotal"=>$subtotal,
-						"user_health_plan_deduction"=>$user_health_plan_deduction,
-						"user_rrsp_deduction"=>$user_rrsp_deduction,
-						"user_currency"=>$user_currency,
-						"user_billing_name"=>$user_billing_name,
-						"user_name"=>$user_name,
-						"user_total"=>$user_total
-					];
-
-					if($group_currency==='' || $user_currency==$group_currency){
-						if($user_currency==='CAD'){
-							$total_billedwork_CADUsers+=$billedwork;
-							$total_GST_CADUsers+=$gst;
-							$total_subtotal_CADUsers+=$subtotal;
-							$total_meddeduction_CADUsers+=$user_health_plan_deduction;
-							$total_rrspdeduction_CADUsers+=$user_rrsp_deduction;
-							$total_CADUsers+=$user_total;
-
-							array_push($CAD_users,$user_info);
-					}else{
+						array_push($CAD_users,$user_info);
+					}
+					else{
 						$group_currency=$user_currency;
 						$total_billedwork_USDUserss+=$billedwork;
 						$total_GST_USDUserss+=$gst;
@@ -436,11 +528,9 @@ class InvoiceController extends Controller
 						$total_rrspdeduction_USDUserss+=$user_rrsp_deduction;
 						$total_USDUsers+=$user_total;
 						array_push($USD_users,$user_info);
-						}
-
-					}	
-
-				}
+					}
+				}	
+			}
 				$total_info_CADUsers=[
 					"total_billedwork_CADUsers"=>$total_billedwork_CADUsers,
 					"total_GST_CADUsers"=>$total_GST_CADUsers,
@@ -472,13 +562,33 @@ class InvoiceController extends Controller
 					'total_info_CADUsers'=>$total_info_CADUsers,
 					'total_info_USDUsers'=>$total_info_USDUsers
 					));	
-			}
+				if($this->check_mail_address==='0'){
+					if($this->showonpage==='1'){
+						echo $summary_report_html;
+					}
+					else{
+						$subject = "Summary Report $this->invoice_period";	
+						if($this->it_test==='1'){
+							$this->sendEmail($summary_report_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
+							
+						}
+						else{
+							$this->sendEmail($summary_report_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
+						}
+					}
+				}
+				else{
+					$invoice_html=$this->test_accounting_mail_address['mail_address'].'<br/>';	
+					echo $invoice_html;
+
+				}	
+				}
 			else{
 				//show page with messahe "no valid payment summary report"
 	
 			}	
 		}
-		echo $invoice_content.$summary_report_html;
+		//echo $invoice_content.$summary_report_html;
 
 	}
 	
@@ -524,6 +634,13 @@ class InvoiceController extends Controller
 
 	}
 	public function generate_invoices_monthly(Request $request){
+		//called from UI
+		$test_mail_config=Config::get("app.test_mail");		
+		$this->check_mail_address=empty($test_mail_config['check_mail_address'])?'0':$test_mail_config['check_mail_address'];
+		$this->showonpage=empty($test_mail_config['showonpage'])?'0':$test_mail_config['showonpage'];
+		$this->it_test=empty($test_mail_config['it_test'])?'0':$test_mail_config['it_test'];
+
+
 		$invoice_content='';
 		$user_rows = $request->input('check_list','selected');
 		
@@ -533,10 +650,11 @@ class InvoiceController extends Controller
 		$summary_report = $request->input('summary_report');
 		$user_ids=[];
 		foreach($user_rows as $user_row){
-			$user_info=explode('-',$user_row);
+			$user_info=explode('$',$user_row);
 			$user_id=$user_info[0];
 			$user_email=$user_info[3];
 			$user_name=$user_info[1].' ' . $user_info[2];
+			
 
 			array_push($user_ids,$user_id);
 		}
@@ -558,8 +676,10 @@ class InvoiceController extends Controller
 			$start_date=$date_range['start_date'];
 			$end_date=$date_range['end_date'];
 
+			$this->invoice_period=$invoice_year."-".sprintf("%02d", $invoice_month);			
+
 			foreach($user_rows as $user_row){
-				$user_info=explode('-',$user_row);
+				$user_info=explode('$',$user_row);
 				$user_id=$user_info[0];
 				$mail_option=$request->input('mail_option_'.$user_id);
 				$user_email=$user_info[3];
@@ -569,8 +689,66 @@ class InvoiceController extends Controller
 				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
 				$invoice_data=$this->generate_invoice(1,$user_id,$start_date,$end_date,$invoice_number,$this->invoice_period);
 				
-				$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
-				echo $invoice_html;
+				if($this->check_mail_address==='0'){
+					$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
+					if($this->showonpage==='1'){
+						echo $invoice_html;
+	
+					}
+					else{
+						$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
+						if($this->it_test==='1')
+						{
+							if($mail_option==='Resource Only'){
+								//$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+								$this->sendEmail('Resource Only',$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+								
+							}
+							elseif($mail_option==='Both'){
+								$recipients=[
+								[
+								"mail_address"=>$this->test_accounting_mail_address['mail_address'],
+								"mail_username"=>$this->test_accounting_mail_address['mail_username'],
+								],
+								[
+								"mail_address"=>$this->test_enduser_mail_address['mail_address'],
+								"mail_username"=>$this->test_enduser_mail_address['mail_username'],
+								]
+							    ];
+								$this->sendEmail_ex($invoice_html,$subject,$recipients);
+							}
+							elseif($mail_option==='Sales Beacon Only'){
+								//$this->sendEmail($invoice_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
+								$this->sendEmail('accounting',$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
+							}
+						}
+						else {				
+							if($mail_option==='Resource Only'){
+								$this->sendEmail($mail_content,$subject,$user_email,$user_name);
+							}
+							elseif($mail_option==='Both'){
+								$recipients=[
+								[
+								"mail_address"=>$this->test_accounting_mail_address['mail_address'],
+								"mail_username"=>$this->test_accounting_mail_address['mail_username'],
+								],
+								[
+								"mail_address"=>$user_email,
+								"mail_username"=>$user_name,
+								]
+							    ];
+								$this->sendEmail_ex($invoice_html,$subject,$recipients);
+							}
+							elseif($mail_option==='Sales Beacon Only'){
+								$this->sendEmail($mail_content,$subject,$user_email,$user_name);
+							}
+						}
+					}
+				}
+				else{
+					$invoice_html=$user_email.'<br/>';	
+					echo $invoice_html;
+				}
 			}
 
 
@@ -692,11 +870,27 @@ class InvoiceController extends Controller
 					//show page with messahe "no valid payment summary report"
 		
 				}	
+				if($this->check_mail_address==='0'){
+					if($this->showonpage==='1'){
+						echo $summary_report_html;
+					}
+					else{
+						$subject = "Summary Report $this->invoice_period";	
+						if($this->it_test==='1'){
+							$this->sendEmail($summary_report_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
+						}
+						else{
+							$this->sendEmail($summary_report_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
+							
+						}
+					}
+				}
+				else{
+					$invoice_html=$this->test_accounting_mail_address['mail_address'].'<br/>';	
+					echo $invoice_html;
+
+				}
 			}
-			echo $invoice_content.$summary_report_html;
-			//echo $summary_report_html;
-			
-		
 		}
 	}
 	private function build_invoice_for_contractor_monthly($start_date,$end_date,$invoice_period){
@@ -721,22 +915,21 @@ class InvoiceController extends Controller
 			$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
 			$invoice_data=$this->generate_invoice(1,$user_id,$start_date,$end_date,$invoice_number,$invoice_period);
 			if($this->check_mail_address==='0'){
-			$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
-			if($this->showonpage==='1'){
-				echo $invoice_html;
+				$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
+				if($this->showonpage==='1'){
+					echo $invoice_html;
 
-			}else{
-				$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
-				if($this->it_test==='1')
-				{
-					$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
 				}
-				else {				
-					$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
+				else{
+					$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
+					if($this->it_test==='1')
+					{
+						$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+					}
+					else {				
+						$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
+					}
 				}
-				}
-			
-			
 			}
 			else{
 				$invoice_html=$user_email.'<br/>';	

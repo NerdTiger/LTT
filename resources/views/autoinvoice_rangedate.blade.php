@@ -116,7 +116,7 @@
                 padding-left:0;
             }
             .accessbutton{
-            border-radius:3em;
+            border-radius:.25em;
             background-color:#33b5e5 ;
 
             }
@@ -162,7 +162,7 @@
                                     From:</b> <input type="text" onclick="displayDatePicker('FromDate');" value="{{$start_date}}" maxlength="12" size="10" name="FromDate"> 
                                     <b>To:</b> <input type="text" onclick="displayDatePicker('ToDate');" value="{{$end_date}}" maxlength="12" size="10" name="ToDate">
                                     @else
-                                        From:</b> 
+                                        Select Date Range:</b> 
                                     <input type="text" onclick="displayDatePicker('FromDate');" value="Start Date" maxlength="12" size="10" name="FromDate"> 
                                     <b>
                                     To:</b> 
@@ -216,7 +216,7 @@
                             @foreach($user_rows as $user_row)
                             <div class="row">
                                 <div class="col-3 col-sm-left">
-                                    <input type='checkbox' name='check_list[]' id='{{$user_row->user_id}}' value='{{$user_row->user_id}}-{{$user_row->user_name}}-{{$user_row->user_lastname}}-{{$user_row->user_email}}'>{{$user_row->user_name}} {{$user_row->user_lastname}}
+                                    <input type='checkbox' name='check_list[]' id='{{$user_row->user_id}}' value='{{$user_row->user_id}}${{$user_row->user_name}}${{$user_row->user_lastname}}${{$user_row->user_email}}'>{{$user_row->user_name}} {{$user_row->user_lastname}}
                                 </div>
                                 <div class="col-2">
                                 {{$user_row->resource_status}}

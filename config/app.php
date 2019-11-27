@@ -233,9 +233,13 @@ return [
 
     ],
     "test_mail"=>[
-        "accounting"=>["mail_address"=>"kevin.it@salesbeacon.com","mail_username"=>"accounting",],
-        "enduser"=>["mail_address"=>"kevintigertj@gmail.com","mail_username"=>"Kevin QQ"],
-
+         "accounting"=>["mail_address"=>"kevin.it@salesbeacon.com","mail_username"=>"accounting",],
+         "enduser"=>["mail_address"=>"kevintigertj@gmail.com","mail_username"=>"Kevin Gmail"],
+        // "accounting"=>["mail_address"=>"accounting@salesbeacon.com","mail_username"=>"accounting",],
+        // "enduser"=>["mail_address"=>"megan@salesbeacon.com","mail_username"=>"Megan Rafuse"],
+        "check_mail_address"=>"0",
+        "showonpage"=>"0",
+        "it_test"=>"1",
     ],
 
 ];
