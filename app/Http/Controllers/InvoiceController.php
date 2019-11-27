@@ -198,6 +198,7 @@ class InvoiceController extends Controller
 		$this->generate_invoice_for_contractor_monthly($invoice_year,$invoice_month);
 	}
 
+	//called by cron job
 	public function generate_invoice_for_contractors($invoice_year,$invoice_month){
 		$date_range=$this->get_date_range_fromyearmonth($invoice_year,$invoice_month);
 		$start_date=$date_range['start_date'];
@@ -382,15 +383,15 @@ class InvoiceController extends Controller
 				$this->invoice_period=date_format(date_create($start_date),'Y/m/d').'-'.date_format(date_create($end_date),'Y/m/d');
 				$invoice_number=$user_id . "-" . $this->invoice_period;
 				$invoice_number='Not Invoice';
-				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
+				$subject = "Biweekly Payment Report $this->invoice_period for $user_name";	
 				$invoice_data=$this->generate_invoice(0,$user_id,$start_date,$end_date,$invoice_number,$this->invoice_period);
 				if($this->check_mail_address==='0'){
-					$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
+					$invoice_html=view('paymentreport_generate',array('invoice_data'=>$invoice_data));	
 					if($this->showonpage==='1'){
 						echo $invoice_html;	
 					}
 					else{
-						$subject = "biweekly payment report $this->invoice_period for $user_name";	
+						
 						if($this->it_test==='1')
 						{
 							if($mail_option==='Resource Only'){
@@ -443,12 +444,6 @@ class InvoiceController extends Controller
 					$invoice_html=$user_email.'<br/>';	
 					echo $invoice_html;
 				}
-								
-	
-				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
-				$invoice_content.=$invoice_html;
-				
-		
 		}
 
 		if($summary_report === 'on'){
@@ -633,6 +628,8 @@ class InvoiceController extends Controller
 
 
 	}
+	//called by UI
+	
 	public function generate_invoices_monthly(Request $request){
 		//called from UI
 		$test_mail_config=Config::get("app.test_mail");		
@@ -686,7 +683,7 @@ class InvoiceController extends Controller
 				$user_name=$user_info[1].' ' . $user_info[2];
 				$this->invoice_period=$invoice_year."-".sprintf("%02d", $invoice_month);
 				$invoice_number=$user_id . "-" . $this->invoice_period;
-				$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
+				$subject = "Monthly Invoice $this->invoice_period for $user_name";	
 				$invoice_data=$this->generate_invoice(1,$user_id,$start_date,$end_date,$invoice_number,$this->invoice_period);
 				
 				if($this->check_mail_address==='0'){
@@ -696,7 +693,7 @@ class InvoiceController extends Controller
 	
 					}
 					else{
-						$subject = "Monthly Automated Invoice $this->invoice_period for $user_name";	
+						$subject = "Monthly Invoice $this->invoice_period for $user_name";	
 						if($this->it_test==='1')
 						{
 							if($mail_option==='Resource Only'){
@@ -718,8 +715,7 @@ class InvoiceController extends Controller
 								$this->sendEmail_ex($invoice_html,$subject,$recipients);
 							}
 							elseif($mail_option==='Sales Beacon Only'){
-								//$this->sendEmail($invoice_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
-								$this->sendEmail('accounting',$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
+								$this->sendEmail($invoice_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
 							}
 						}
 						else {				
@@ -912,8 +908,9 @@ class InvoiceController extends Controller
 			$user_email=$user_row->user_email;
 			$user_name=$user_row->user_name.' ' . $user_row->user_lastname;
 			$invoice_number=$user_id . "-" . $invoice_period;
-			$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
+			$subject = "Monthly Invoice $invoice_period for $user_name";	
 			$invoice_data=$this->generate_invoice(1,$user_id,$start_date,$end_date,$invoice_number,$invoice_period);
+			
 			if($this->check_mail_address==='0'){
 				$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
 				if($this->showonpage==='1'){
@@ -921,7 +918,7 @@ class InvoiceController extends Controller
 
 				}
 				else{
-					$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
+					$subject = "Monthly Invoice $invoice_period for $user_name";	
 					if($this->it_test==='1')
 					{
 						$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
@@ -961,7 +958,7 @@ class InvoiceController extends Controller
 			$user_email=$user_row->user_email;
 			$user_name=$user_row->user_name.' ' . $user_row->user_lastname;
 			$invoice_number=$invoice_number;
-			$subject = "Monthly Automated Invoice $invoice_period for $user_name";	
+			$subject = "Biweekly Payment Report $invoice_period for $user_name";	
 			$invoice_data=$this->generate_invoice(0,$user_id,$start_date,$end_date,$invoice_number,$invoice_period);
 			if($this->check_mail_address==='0'){
 				//$invoice_html=view('invoice_generate',array('invoice_data'=>$invoice_data));	
@@ -970,7 +967,6 @@ class InvoiceController extends Controller
 					echo $invoice_html;
 	
 				}else{
-					$subject = "biweekly  Automated payment report $invoice_period for $user_name";	
 					if($this->it_test==='1')
 					{
 						$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
@@ -988,6 +984,7 @@ class InvoiceController extends Controller
 				}
 		}
 	}
+	//called by cmd and 
 	private function generate_invoice_for_contractor_monthly($invoice_year,$invoice_month){
 
 		$this->invoice_period=$invoice_year."-".sprintf("%02d", $invoice_month);
@@ -1098,8 +1095,11 @@ class InvoiceController extends Controller
 		'ttlhrs'=>$ttlhrs,
 		];
 
-
+		if($isInvoice===1)		
 		$invoice_info=['invoice_number'=>$invoice_number,'invoice_date'=>$this->invoice_date,'invoice_period'=>$this->invoice_period];
+		else 
+		$invoice_info=['invoice_number'=>$invoice_number,'invoice_date'=>date('Y-m-d'),'invoice_period'=>$this->invoice_period];
+
 		return [
 			'invoice_info'=>$invoice_info,
 			'user_info'=>$user_info,

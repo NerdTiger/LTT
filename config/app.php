@@ -237,8 +237,8 @@ return [
          "enduser"=>["mail_address"=>"kevintigertj@gmail.com","mail_username"=>"Kevin Gmail"],
         // "accounting"=>["mail_address"=>"accounting@salesbeacon.com","mail_username"=>"accounting",],
         // "enduser"=>["mail_address"=>"megan@salesbeacon.com","mail_username"=>"Megan Rafuse"],
-        "check_mail_address"=>"0",
-        "showonpage"=>"0",
+        //"check_mail_address"=>"1",
+        "showonpage"=>"1",
         "it_test"=>"1",
     ],
 
