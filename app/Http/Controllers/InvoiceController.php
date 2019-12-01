@@ -697,8 +697,8 @@ class InvoiceController extends Controller
 						if($this->it_test==='1')
 						{
 							if($mail_option==='Resource Only'){
-								//$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
-								$this->sendEmail('Resource Only',$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+								$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+								//$this->sendEmail('Resource Only',$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
 								
 							}
 							elseif($mail_option==='Both'){
@@ -922,9 +922,11 @@ class InvoiceController extends Controller
 					if($this->it_test==='1')
 					{
 						$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+						$this->sendEmail($invoice_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
 					}
 					else {				
 						$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
+						$this->sendEmail($invoice_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
 					}
 				}
 			}
@@ -970,9 +972,11 @@ class InvoiceController extends Controller
 					if($this->it_test==='1')
 					{
 						$this->sendEmail($invoice_html,$subject,$this->test_enduser_mail_address['mail_address'],$this->test_enduser_mail_address['mail_username']);
+						$this->sendEmail($invoice_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
 					}
 					else {				
 						$this->sendEmail($invoice_html,$subject,$user_email,$user_name);
+						$this->sendEmail($invoice_html,$subject,$this->test_accounting_mail_address['mail_address'],$this->test_accounting_mail_address['mail_username']);
 					}
 					}
 				

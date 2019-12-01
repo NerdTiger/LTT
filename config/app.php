@@ -233,7 +233,7 @@ return [
 
     ],
     "test_mail"=>[
-         "accounting"=>["mail_address"=>"kevin.it@salesbeacon.com","mail_username"=>"accounting",],
+         "accounting"=>["mail_address"=>"kevin.it@salesbeacon.com","mail_username"=>"accounting"],
          "enduser"=>["mail_address"=>"kevintigertj@gmail.com","mail_username"=>"Kevin Gmail"],
         // "accounting"=>["mail_address"=>"accounting@salesbeacon.com","mail_username"=>"accounting",],
         // "enduser"=>["mail_address"=>"megan@salesbeacon.com","mail_username"=>"Megan Rafuse"],
